@@ -1,0 +1,15 @@
+{
+    "tripleData": {
+        "active": true,
+        "products": ["GraphDB"],
+        "productIndex": 0
+    },
+    "documentData": {
+        "active": true,
+        "products": ["MongoDB"],
+        "productIndex": 0
+    },
+    "sensorData": {
+        "active": false
+    }
+}
