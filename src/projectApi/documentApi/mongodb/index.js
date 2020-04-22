@@ -1,5 +1,19 @@
-const {createProjectDoc} = require('./api')
+const {
+    createProjectDoc,
+    getProjectDoc,
+    deleteProjectDoc,
+    uploadDocuments,
+    removeDocuments,
+    getProjectsDoc,
+    updateProjectDoc
+} = require('./mongoApi')
 
 module.exports = {
-    createProjectDoc
+    getProjectsDoc,
+    createProjectDoc,
+    getProjectDoc,
+    deleteProjectDoc,
+    uploadDocuments,
+    removeDocuments,
+    updateProjectDoc
 }

@@ -5,6 +5,8 @@ const {
     updateProject,
     deleteProject,
     queryProject,
+    uploadDocumentToProject,
+    getFile
 } = require('./basicApi')
 
 const {getProjectConfig} = require('./basicConfig')
@@ -16,5 +18,7 @@ module.exports = {
     updateProject,
     deleteProject,
     queryProject,
-    getProjectConfig
+    getProjectConfig,
+    uploadDocumentToProject,
+    getFile
 }

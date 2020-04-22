@@ -1,4 +1,4 @@
-const { repoConfig } = require('../../util/repoConfig')
+const { repoConfig } = require('../util/repoConfig')
 const request = require('request');
 const FormData = require('form-data')
 var fs = require('fs');
