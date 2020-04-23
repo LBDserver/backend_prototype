@@ -10,8 +10,8 @@ const {
     deleteProject,
     queryProject,
     getProjectConfig,
-    uploadDocumentToProject
-
+    uploadDocumentToProject,
+    getDocumentFromProject
 } = require('../projectApi')
 
 const { authenticate } = require('../authApi')
@@ -35,6 +35,6 @@ router.post('/:id', authenticate, getProjectConfig, updateProject)
 router.delete('/:id', authenticate, deleteProject)
 
 router.post('/upload/:id/', authenticate, upload.single('file'), uploadDocumentToProject)
-router.get('/files/:id/', authenticate, upload.single('file'), uploadDocumentToProject)
+router.get('/:id/files/:fileId/', authenticate, upload.single('file'), getDocumentFromProject)
 
 module.exports = router;

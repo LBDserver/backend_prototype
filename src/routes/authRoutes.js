@@ -9,7 +9,10 @@ const {
     getUser,
     getUsers,
     updateProfile,
-    authenticate
+    authenticate,
+    authenticateAdmin,
+    logoutAll,
+    getUserById
 } = require('../authApi')
 
 router.get('/', (req, res) => {
@@ -18,11 +21,16 @@ router.get('/', (req, res) => {
 
 router.post('/register', register)
 router.post('/login', login)
-router.post('/logout', logout)
+router.post('/logout', authenticate, logout)
+router.post('/logoutAll', authenticate, logoutAll)
 
 router.get('/profile/me', authenticate, getUser)
 router.post('/profile/me', authenticate, updateProfile)
 router.put('/profile/me', authenticate, updateProfile)
+router.patch('/profile/me', authenticate, updateProfile)
 router.delete('/profile/me', authenticate, deleteProfile)
+
+router.get('/users', authenticateAdmin, getUsers)
+router.get('/users/:id', authenticateAdmin, getUserById)
 
 module.exports = router;

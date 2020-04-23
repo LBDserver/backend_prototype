@@ -3,8 +3,11 @@ const User = require('../projectApi/documentApi/mongodb/models/UserModel')
 register = async (req, res) => {
     try {
         const user = new User(req.body)
+        // the user's webId should be validated if one is given! otherwise false. If no webId is given, the user gets a webId from the server.
+
         await user.save()
-        res.status(201).send(user)
+        const token = await user.generateAuthToken()
+        res.status(201).send({ user, token })
     } catch (error) {
         console.log('error', error)
         res.status(400).send(error)
@@ -14,35 +17,51 @@ register = async (req, res) => {
 login = async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
-        res.send(user)
+        const token = await user.generateAuthToken()
+        res.send({ user, token })
     } catch (error) {
         console.log('error', error)
-        res.status(400).send({error})
+        res.status(400).send({ error })
     }
 }
 
 logout = async (req, res) => {
-    return res.json({ message: 'this function is not implemented yet' })
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return token.token !== req.token
+        })
+
+        await req.user.save()
+        res.send()
+
+    } catch (error) {
+        res.staus(500).send()
+    }
+}
+
+logoutAll = async (req, res) => {
+    try {
+        req.user.tokens = []
+        await req.user.save()
+        res.send()
+    } catch (error) {
+        res.staus(500).send()
+    }
 }
 
 updateProfile = async (req, res) => {
     try {
         const updates = Object.keys(req.body)
-        const allowedUpdates = ['name', 'email', 'password', 'age']
+        const allowedUpdates = ['name', 'email', 'password', 'age', 'webId']
         const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
         if (!isValidOperation) {
             return res.status(404).send({ error: 'Invalid updates!' })
         }
 
-        const user = await User.findById(req.params.id)
-        if (!user) {
-            return res.status(400).send('User not found')
-        }
-
+        const user = req.user
         updates.forEach((update) => user[update] = req.body[update])
         await user.save()
-
 
         res.send(user)
     } catch (error) {
@@ -52,11 +71,20 @@ updateProfile = async (req, res) => {
 
 getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id)
+        res.send(req.user)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+}
+
+getUserById = async (req, res) => {
+    try {
+        const _id = req.params.id
+        const user = User.findById({_id})
         if (!user) {
-            return res.status(400).send('User not found')
+            res.status(404).send({error: 'user not found'})
         }
-        res.send(user)
+        res.send(req.user)
     } catch (error) {
         res.status(400).send(error)
     }
@@ -76,14 +104,11 @@ getUsers = async (req, res) => {
 
 deleteProfile = async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id)
-        if (!user) {
-            return res.status(400).send('User not found')
-        }
-        res.send(user)
+        await req.user.remove()
+        res.send(req.user)
     } catch (error) {
         res.status(400).send(error)
     }
 }
 
-module.exports = { register, login, logout, deleteProfile, getUser, getUsers, updateProfile }
+module.exports = { register, login, logout, logoutAll, deleteProfile, getUser, getUsers, updateProfile, getUserById }

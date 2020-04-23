@@ -6,9 +6,8 @@ const fileSchema = new mongoose.Schema({
         type: Buffer,
         required: true
     },
-    uri: {
-        type: mongoose.SchemaTypes.Url,
-        required: true
+    url: {
+        type: mongoose.SchemaTypes.Url
     },
     acl: {
         type: mongoose.SchemaTypes.Url
@@ -18,11 +17,20 @@ const fileSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "Project",
             required: true
-        }
+        },
+    owner: {
+        type: mongoose.SchemaTypes.ObjectId,
+        required: true
+    }
 }, {
     timestamps: true
 })
 
+fileSchema.pre('save', async function (next) {
+    const file = this
+    file.url = `http://localhost:5000/project/${file.project}/files/${file._id}`
+    next()
+})
 const File = mongoose.model('File', fileSchema)
 
 module.exports = File

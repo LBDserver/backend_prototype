@@ -1,5 +1,5 @@
-const {authenticate} = require('./authenticate')
-const { register, login, logout, deleteProfile, getUser, getUsers, updateProfile } = require('./account')
+const {authenticate, authenticateAdmin} = require('./authenticateApi')
+const { register, login, logout, deleteProfile, getUser, getUsers, updateProfile, logoutAll, getUserById } = require('./accountApi')
 
 module.exports = {
     register,
@@ -9,5 +9,8 @@ module.exports = {
     getUser,
     getUsers,
     updateProfile,
-    authenticate
+    authenticate,
+    logoutAll,
+    authenticateAdmin,
+    getUserById
 }

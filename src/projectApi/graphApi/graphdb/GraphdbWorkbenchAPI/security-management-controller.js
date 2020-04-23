@@ -58,7 +58,6 @@ createUser = async (username, password, token) => {
 
         request(options, function (error, response) {
             if (error) throw new Error(error);
-            console.log(response.body);
         });
         return
 
@@ -101,7 +100,6 @@ updateUser = async (username, password, body, token) => {
 
         request(options, function (error, response) {
             if (error) throw new Error(error);
-            console.log(response.body);
         });
         return
 

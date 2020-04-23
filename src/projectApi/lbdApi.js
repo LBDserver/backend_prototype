@@ -3,13 +3,14 @@ const docStore = require('./documentApi/mongodb')
 
 createProject = async (req, res) => {
     try {
+        const owner = req.user._id 
         // create project repository graphdb
         // create project repository docdb, get project_id
         // upload graph.meta to repository (project_id, acl, owner => no acl is public, acl template initially only allows owner access)
         // return necessary information
-        const documentData = await docStore.createProjectDoc(req.body)
+        const documentData = await docStore.createProjectDoc({ ...req.body, owner})
 
-        return res.status(documentData.status).json({project: documentData.project})
+        return res.status(documentData.status).json({ project: documentData.project })
     } catch (error) {
         return res.json({ error })
     }
@@ -17,71 +18,77 @@ createProject = async (req, res) => {
 
 getAllProjects = async (req, res) => {
     try {
+        const owner = req.user._id
         // get projectdata from docdb
         // get projectURIs with sparql
         // combine results
-        const documentData = await docStore.getProjectsDoc()
+        const documentData = await docStore.getProjectsDoc({owner})
 
-        return res.status(documentData.status).json({projects: documentData.projects})
+        return res.status(documentData.status).json({ projects: documentData.projects })
     } catch (error) {
         console.log('error', error)
-        return res.json({ error })
+        return res.status(404).json({ error })
     }
 }
 
 getOneProject = async (req, res) => {
-    const id = req.params.id
     try {
+        const _id = req.params.id
+        const owner = req.user._id
         // get projectdata from docdb
         // get projectURIs with sparql
         // combine results
-        const documentData = await docStore.getProjectDoc(id)
+        const documentData = await docStore.getProjectDoc({_id, owner})
         const project = documentData.project
         const files = documentData.files
-        return res.status(documentData.status).json({project, files})
+        return res.status(documentData.status).json({ project, files })
     } catch (error) {
-        return res.json({ error })
+        return res.status(404).json({ message: 'Project not found' })
     }
 }
 
 updateProject = async (req, res) => {
-    const id = req.params.id
     try {
+        const _id = req.params.id
+        const owner = req.user._id
+        const body = req.body
         // updates docdbinformation
         // if id or uri changes, also update graphdb
-        const documentData = await docStore.updateProjectDoc(id, req.body)
-        console.log('documentData', documentData.status)
-        return res.status(documentData.status).json({project: documentData.project, notPermittedUpdates: documentData.notPermitted})
+        const documentData = await docStore.updateProjectDoc({_id, body, owner})
+        return res.status(documentData.status).json({ project: documentData.project, nonPermittedUpdates: documentData.notPermitted })
     } catch (error) {
         console.log('error', error)
-        return res.status(400).json({ error })
+        return res.status(404).json({ message: 'Project not found' })
     }
 }
 
 deleteProject = async (req, res) => {
-    const id = req.params.id
     try {
+        const _id = req.params.id
+        const owner = req.user._id
         // delete project from docdb
         // delete project from graphdb
-        const documentData = await docStore.deleteProjectDoc(id)
+        const documentData = await docStore.deleteProjectDoc({_id, owner})
 
-        return res.status(documentData.status).json({project: documentData.project})
+        return res.status(documentData.status).json({ project: documentData.project })
     } catch (error) {
-        return res.json({ error })
+        return res.status(404).json({message: "Project not found"})
     }
 }
 
 uploadDocumentToProject = async (req, res) => {
-    const id = req.params.id
-    const uri = 'http://testuri.com/test123'
     try {
+        const _id = req.params.id
+        const owner = req.user._id
+        const main = req.file.buffer
+
         // upload document
         // attach document information to graphdb
-        const documentData = await docStore.uploadDocuments(id, req.file.buffer, uri)
-
-        return res.status(documentData.status).json({project: documentData.project})
+        const documentData = await docStore.uploadDocuments({_id, main, owner})
+        return res.status(documentData.status).json({ url: documentData.file.url })
     } catch (error) {
-        return res.json({ error })
+        console.log('error', error)
+        return res.status(404).json({ message: 'Project not found' })
     }
 }
 
@@ -91,17 +98,18 @@ queryProject = async (req, res) => {
     return res.json({ message: 'this function is not implemented yet' })
 }
 
-getFile = async (req, res) => {
-    const projectId = req.params.id
-    const uri = req.query.uri
+getDocumentFromProject = async (req, res) => {
     try {
         // only access docdb
-        const file = await docStore.getProjectFile(projectId, uri)
+        const projectId = req.params.id
+        const fileId = req.params.fileId
+        const owner = req.user._id
+        const file = await docStore.getProjectFile({projectId, fileId, owner})
 
-        return res.status(file.status).json({file: file.file})
+        return res.status(file.status).json({ file: file.file })
     } catch (error) {
         console.log('error', error)
-        return res.json({ error })
+        return res.status(404).json({ error })
     }
 }
 
@@ -112,6 +120,6 @@ module.exports = {
     updateProject,
     deleteProject,
     queryProject,
-    getFile,
+    getDocumentFromProject,
     uploadDocumentToProject
 }

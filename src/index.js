@@ -13,5 +13,5 @@ app.use('/', authRoutes)
 
 // Server listening
 app.listen(port, () => {
-    console.log("Server up on port", port)
+    console.log("\nServer up on port", port)
 })
