@@ -3,6 +3,10 @@ const docStore = require('./documentApi/mongodb')
 
 createProject = async (req, res) => {
     try {
+        // create project repository graphdb
+        // create project repository docdb, get project_id
+        // upload graph.meta to repository (project_id, acl, owner => no acl is public, acl template initially only allows owner access)
+        // return necessary information
         const documentData = await docStore.createProjectDoc(req.body)
 
         return res.status(documentData.status).json({project: documentData.project})
@@ -13,6 +17,9 @@ createProject = async (req, res) => {
 
 getAllProjects = async (req, res) => {
     try {
+        // get projectdata from docdb
+        // get projectURIs with sparql
+        // combine results
         const documentData = await docStore.getProjectsDoc()
 
         return res.status(documentData.status).json({projects: documentData.projects})
@@ -25,6 +32,9 @@ getAllProjects = async (req, res) => {
 getOneProject = async (req, res) => {
     const id = req.params.id
     try {
+        // get projectdata from docdb
+        // get projectURIs with sparql
+        // combine results
         const documentData = await docStore.getProjectDoc(id)
         const project = documentData.project
         const files = documentData.files
@@ -37,6 +47,8 @@ getOneProject = async (req, res) => {
 updateProject = async (req, res) => {
     const id = req.params.id
     try {
+        // updates docdbinformation
+        // if id or uri changes, also update graphdb
         const documentData = await docStore.updateProjectDoc(id, req.body)
         console.log('documentData', documentData.status)
         return res.status(documentData.status).json({project: documentData.project, notPermittedUpdates: documentData.notPermitted})
@@ -49,6 +61,8 @@ updateProject = async (req, res) => {
 deleteProject = async (req, res) => {
     const id = req.params.id
     try {
+        // delete project from docdb
+        // delete project from graphdb
         const documentData = await docStore.deleteProjectDoc(id)
 
         return res.status(documentData.status).json({project: documentData.project})
@@ -61,6 +75,8 @@ uploadDocumentToProject = async (req, res) => {
     const id = req.params.id
     const uri = 'http://testuri.com/test123'
     try {
+        // upload document
+        // attach document information to graphdb
         const documentData = await docStore.uploadDocuments(id, req.file.buffer, uri)
 
         return res.status(documentData.status).json({project: documentData.project})
@@ -70,6 +86,8 @@ uploadDocumentToProject = async (req, res) => {
 }
 
 queryProject = async (req, res) => {
+    // query project with sparql
+    // add option to immediately fetch files (getFile)
     return res.json({ message: 'this function is not implemented yet' })
 }
 
@@ -77,6 +95,7 @@ getFile = async (req, res) => {
     const projectId = req.params.id
     const uri = req.query.uri
     try {
+        // only access docdb
         const file = await docStore.getProjectFile(projectId, uri)
 
         return res.status(file.status).json({file: file.file})

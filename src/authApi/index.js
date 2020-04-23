@@ -1,13 +1,13 @@
 const {authenticate} = require('./authenticate')
-const {register, login, logout, deleteProfile} = require('./account')
-const {getProfileInfo, updateProfileInfo} = require('./profile')
+const { register, login, logout, deleteProfile, getUser, getUsers, updateProfile } = require('./account')
 
 module.exports = {
-    getProfileInfo,
-    updateProfileInfo,
     register,
     login,
     logout,
     deleteProfile,
+    getUser,
+    getUsers,
+    updateProfile,
     authenticate
 }

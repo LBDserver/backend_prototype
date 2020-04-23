@@ -7,7 +7,7 @@ const {
     queryProject,
     uploadDocumentToProject,
     getFile
-} = require('./basicApi')
+} = require('./lbdApi')
 
 const {getProjectConfig} = require('./basicConfig')
 

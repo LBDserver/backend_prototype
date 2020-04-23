@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    getProfileInfo,
-    updateProfileInfo,
-    deleteProfile,
     register,
     login,
+    logout,
+    deleteProfile,
+    getUser,
+    getUsers,
+    updateProfile,
     authenticate
 } = require('../authApi')
 
@@ -18,9 +20,9 @@ router.post('/register', register)
 router.post('/login', login)
 router.post('/logout', logout)
 
-router.get('/profile/me', authenticate, getProfileInfo)
-router.post('/profile/me', authenticate, updateProfileInfo)
-router.put('/profile/me', authenticate, updateProfileInfo)
+router.get('/profile/me', authenticate, getUser)
+router.post('/profile/me', authenticate, updateProfile)
+router.put('/profile/me', authenticate, updateProfile)
 router.delete('/profile/me', authenticate, deleteProfile)
 
 module.exports = router;
