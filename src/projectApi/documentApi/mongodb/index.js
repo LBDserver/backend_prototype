@@ -3,10 +3,11 @@ const {
     getProjectDoc,
     deleteProjectDoc,
     uploadDocuments,
-    removeDocuments,
+    deleteDocuments,
     getProjectsDoc,
     updateProjectDoc,
-    getProjectFile
+    getProjectFile,
+    migrateMongo
 } = require('./mongoApi')
 
 module.exports = {
@@ -15,7 +16,8 @@ module.exports = {
     getProjectDoc,
     deleteProjectDoc,
     uploadDocuments,
-    removeDocuments,
+    deleteDocuments,
     updateProjectDoc,
-    getProjectFile
+    getProjectFile,
+    migrateMongo
 }

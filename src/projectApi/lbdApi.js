@@ -3,14 +3,19 @@ const docStore = require('./documentApi/mongodb')
 
 createProject = async (req, res) => {
     try {
-        const owner = req.user._id 
-        // create project repository graphdb
+        const owner = req.user._id
+
         // create project repository docdb, get project_id
-        // upload graph.meta to repository (project_id, acl, owner => no acl is public, acl template initially only allows owner access)
-        // return necessary information
         const documentData = await docStore.createProjectDoc({ ...req.body, owner})
 
-        return res.status(documentData.status).json({ project: documentData.project })
+        // create project repository graphdb
+        const graphData = await graphStore.createRepository(documentData.url)
+        
+        // update graph with project information
+        const pushProjectInfo = await graphStore.uploadNamedGraph()
+        
+
+        return res.status(201).json({ documentData, graphData })
     } catch (error) {
         return res.json({ error })
     }

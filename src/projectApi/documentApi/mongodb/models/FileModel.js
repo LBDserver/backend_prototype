@@ -7,10 +7,16 @@ const fileSchema = new mongoose.Schema({
         required: true
     },
     url: {
-        type: mongoose.SchemaTypes.Url
+        type: String,
+        required: true
     },
     acl: {
-        type: mongoose.SchemaTypes.Url
+        type: String,
+        default: 'https://lbdserver.com/acl/private'
+    },
+    description: {
+        type: String, 
+        required: true
     },
     project:
         {
@@ -26,11 +32,6 @@ const fileSchema = new mongoose.Schema({
     timestamps: true
 })
 
-fileSchema.pre('save', async function (next) {
-    const file = this
-    file.url = `http://localhost:5000/project/${file.project}/files/${file._id}`
-    next()
-})
 const File = mongoose.model('File', fileSchema)
 
 module.exports = File

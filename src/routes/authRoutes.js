@@ -11,26 +11,30 @@ const {
     updateProfile,
     authenticate,
     authenticateAdmin,
-    logoutAll,
-    getUserById
+    getUserById,
+    checkAccess,
+    migrateUrls
 } = require('../authApi')
 
 router.get('/', (req, res) => {
     return res.status(200).send('Welcome to the home page of the LBDserver API')
 })
 
+// auth routes
 router.post('/register', register)
 router.post('/login', login)
 router.post('/logout', authenticate, logout)
-router.post('/logoutAll', authenticate, logoutAll)
 
-router.get('/profile/me', authenticate, getUser)
-router.post('/profile/me', authenticate, updateProfile)
-router.put('/profile/me', authenticate, updateProfile)
-router.patch('/profile/me', authenticate, updateProfile)
-router.delete('/profile/me', authenticate, deleteProfile)
+// change to webID-based routes
+router.get('/:userName', authenticate, checkAccess, getUser)
+router.post('/:userName', authenticate, updateProfile)
+router.put('/:userName', authenticate, updateProfile)
+router.patch('/:userName', authenticate, updateProfile)
+router.delete('/:userName', authenticate, deleteProfile)
 
+// requires admin privileges
 router.get('/users', authenticateAdmin, getUsers)
-router.get('/users/:id', authenticateAdmin, getUserById)
+router.get('/migrate', authenticateAdmin, migrateUrls) // in case of migration to another uri (e.g. from dev to production)
+
 
 module.exports = router;

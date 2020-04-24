@@ -9,7 +9,6 @@ const {
     updateProject,
     deleteProject,
     queryProject,
-    getProjectConfig,
     uploadDocumentToProject,
     getDocumentFromProject
 } = require('../projectApi')
@@ -29,9 +28,9 @@ router.post('/', authenticate, createProject)
 router.get('/:id', authenticate, getOneProject)
 router.get('/:id/query', authenticate, queryProject)
 
-router.put('/:id', authenticate, getProjectConfig, updateProject)
-router.patch('/:id', authenticate, getProjectConfig, updateProject)
-router.post('/:id', authenticate, getProjectConfig, updateProject)
+router.put('/:id', authenticate, updateProject)
+router.patch('/:id', authenticate, updateProject)
+router.post('/:id', authenticate, updateProject)
 router.delete('/:id', authenticate, deleteProject)
 
 router.post('/upload/:id/', authenticate, upload.single('file'), uploadDocumentToProject)

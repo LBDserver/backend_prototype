@@ -1,0 +1,10 @@
+# ACL resource for the private folder
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix lbd: <https://lbdserver.com/vocabulary#>.
+
+
+# The owner has all permissions
+<#owner>
+    a acl:Authorization;
+    acl:agentClass lbd:Owner;
+    acl:mode acl:Read, acl:Write, acl:Control.

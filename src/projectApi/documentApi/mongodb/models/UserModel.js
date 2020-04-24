@@ -8,10 +8,11 @@ const Project = require('./ProjectModel')
 const File = require('./FileModel')
 
 const userSchema = new mongoose.Schema({
-    name: {
+    username: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     email: {
         type: String,
@@ -25,9 +26,14 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    webId: {
-        type: mongoose.SchemaTypes.Url
-        //required: true
+    url: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    acl: {
+        type: String,
+        default: 'https://lbdserver.com/acl/public'
     },
     password: {
         type: String,
@@ -40,14 +46,9 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    age: {
-        type: Number,
-        default: 0,
-        validate(value) {
-            if (value < 0) {
-                throw new Error('Age must be a postive number')
-            }
-        }
+    guest: {
+        type: Boolean,
+        default: false
     },
     tokens: [{
         token: {
@@ -81,7 +82,7 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this
-    const token = jwt.sign({ _id: user._id.toString() }, 'dskdkdkhddovjsfdqs3654fqs3d8fqsdq534vs6dqf')
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.TOKEN_SECRET)
 
     user.tokens = user.tokens.concat({ token })
     await user.save()
@@ -107,11 +108,6 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
 userSchema.pre('save', async function (next) {
     const user = this
-    
-    if (!user.webId) {
-        user.webId = `http://localhost:5000/${user._id}`
-    }
-
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8)
     }

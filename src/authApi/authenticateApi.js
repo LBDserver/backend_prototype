@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken')
+const { checkPermissions } = require('./checkPermissions')
 const User = require('../projectApi/documentApi/mongodb/models/UserModel')
+const Project = require('../projectApi/documentApi/mongodb/models/ProjectModel')
 
 
 authenticate = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
-        const decoded = jwt.verify(token, 'dskdkdkhddovjsfdqs3654fqs3d8fqsdq534vs6dqf')
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET)
         const user = await User.findOne({ _id: decoded._id, 'tokens.token': token })
         if (!user) {
             throw new Error()
@@ -15,20 +17,20 @@ authenticate = async (req, res, next) => {
         next()
 
     } catch (error) {
-        res.status(401).send({error: 'Please authenticate'})
+        res.status(401).send({ error: 'Please authenticate' })
     }
 }
 
 authenticateAdmin = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
-        const decoded = jwt.verify(token, 'dskdkdkhddovjsfdqs3654fqs3d8fqsdq534vs6dqf')
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET)
         const user = await User.findOne({ _id: decoded._id, 'tokens.token': token })
         if (!user) {
             throw new Error()
         }
 
-        if (user.email === 'jeroen.werbrouck@hotmail.com') {
+        if (user.email === 'admin@lbdserver.com') {
             req.user = user
             req.token = token
             next()
@@ -37,8 +39,19 @@ authenticateAdmin = async (req, res, next) => {
         }
 
     } catch (error) {
-        res.status(401).send({error: 'Admin rights are required to access this endpoint'})
+        res.status(401).send({ error: 'Admin rights are required to access this endpoint' })
     }
 }
 
-module.exports = { authenticate, authenticateAdmin }
+checkAccess = async (req, res, next) => {
+    try {
+        const accessPermitted = await checkPermissions(req)
+        next()
+    } catch (error) {
+        console.log('error', error)
+        res.status(403).send({ message: error })
+    }
+}
+
+
+module.exports = { authenticate, authenticateAdmin, checkAccess }

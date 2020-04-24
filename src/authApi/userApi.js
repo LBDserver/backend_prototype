@@ -2,7 +2,7 @@ const User = require('../projectApi/documentApi/mongodb/models/UserModel')
 
 register = async (req, res) => {
     try {
-        const user = new User(req.body)
+        const user = new User({...req.body, url: `${process.env.SERVER_URL}/${req.body.username}`})
         // the user's webId should be validated if one is given! otherwise false. If no webId is given, the user gets a webId from the server.
 
         await user.save()
@@ -25,6 +25,14 @@ login = async (req, res) => {
     }
 }
 
+guestLogin = async (req, res, next) => {
+    // experimental setup using webID inbox
+    // allows to access LBDserver from within solid pods and other LDP implementations
+    // first have a look at OIDC and WebId-OIDC.
+    // make new guest user instance
+    next()
+}
+
 logout = async (req, res) => {
     try {
         req.user.tokens = req.user.tokens.filter((token) => {
@@ -37,6 +45,11 @@ logout = async (req, res) => {
     } catch (error) {
         res.staus(500).send()
     }
+}
+
+guestLogout = async (req, res, next) => {
+    // remove the guest user instance
+    next()
 }
 
 logoutAll = async (req, res) => {
@@ -77,31 +90,6 @@ getUser = async (req, res) => {
     }
 }
 
-getUserById = async (req, res) => {
-    try {
-        const _id = req.params.id
-        const user = User.findById({_id})
-        if (!user) {
-            res.status(404).send({error: 'user not found'})
-        }
-        res.send(req.user)
-    } catch (error) {
-        res.status(400).send(error)
-    }
-}
-
-getUsers = async (req, res) => {
-    try {
-        const users = await User.find({})
-        if (!users) {
-            return res.status(400).send('No users found')
-        }
-        res.send(users)
-    } catch (error) {
-        res.status(400).send(error)
-    }
-}
-
 deleteProfile = async (req, res) => {
     try {
         await req.user.remove()
@@ -111,4 +99,4 @@ deleteProfile = async (req, res) => {
     }
 }
 
-module.exports = { register, login, logout, logoutAll, deleteProfile, getUser, getUsers, updateProfile, getUserById }
+module.exports = { register, login, logout, logoutAll, deleteProfile, getUser, updateProfile }

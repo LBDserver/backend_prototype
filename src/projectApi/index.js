@@ -9,8 +9,6 @@ const {
     getDocumentFromProject
 } = require('./lbdApi')
 
-const {getProjectConfig} = require('./basicConfig')
-
 module.exports = {
     getAllProjects,
     createProject,
@@ -18,7 +16,6 @@ module.exports = {
     updateProject,
     deleteProject,
     queryProject,
-    getProjectConfig,
     uploadDocumentToProject,
     getDocumentFromProject
 }

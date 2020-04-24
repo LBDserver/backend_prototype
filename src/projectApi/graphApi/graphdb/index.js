@@ -13,7 +13,13 @@ const {
 
 const {
     queryRepository,
-    updateRepositorySparql
+    updateRepositorySparql,
+    createNamedGraph,
+    updateNamedGraph,
+    deleteNamedGraph,
+    createNameSpace,
+    deleteNameSpace,
+    getNameSpace
 } = require('./rdf4jAPI')
 
 module.exports = {
@@ -28,5 +34,11 @@ module.exports = {
     updateUser,
     createUser,
     queryRepository,
-    updateRepositorySparql
+    updateRepositorySparql,
+    createNamedGraph,
+    updateNamedGraph,
+    deleteNamedGraph,
+    createNameSpace,
+    deleteNameSpace,
+    getNameSpace
 }
