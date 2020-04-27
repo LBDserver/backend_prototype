@@ -54,14 +54,17 @@ const userSchema = new mongoose.Schema({
             type: String,
             required: true
         }
+    }],
+    projects: [{
+        Graph_url: {
+            type: String
+        },
+        LBD_url: {
+            type: String
+        }
     }]
 })
 
-userSchema.virtual('projects', {
-    ref: 'Project',
-    localField: '_id',
-    foreignField: 'owner'
-})
 
 userSchema.virtual('files', {
     ref: 'File',

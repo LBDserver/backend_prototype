@@ -151,15 +151,14 @@ updateProjectDoc = ({ projectId, body, user }) => {
 }
 
 // ACL implemented
-getProjectFile = async ({ projectId, fileId, user }) => {
+getProjectFile = async ({ projectName, fileId, user }) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const file = await File.findOne({ _id: fileId, project: projectId })
+            const file = await File.findOne({ _id: fileId, projectName })
+
             if (!file) {
                 reject({ status: 404, message: 'File not found' })
             }
-
-            const accessPermitted = await checkPermissions(file.acl, ['acl:Read'], project.owner, user)
 
             if (accessPermitted) {
                 await file.populate('project').execPopulate()

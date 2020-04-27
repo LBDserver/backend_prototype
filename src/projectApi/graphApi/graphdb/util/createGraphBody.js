@@ -1,4 +1,4 @@
-exports.defaultBody = function(name, context, baseURI, data) {
+defaultBody = (name, context, baseURI, data) => {
     return {
         name,
         status: "NONE",
@@ -9,7 +9,7 @@ exports.defaultBody = function(name, context, baseURI, data) {
         forceSerial: false,
         type: "text",
         format: "text/turtle",
-        data,
+        data: data,
         timestamp: Date.now(),
         parserSettings: {
             "preserveBNodeIds": false,
@@ -24,3 +24,5 @@ exports.defaultBody = function(name, context, baseURI, data) {
         xRequestIdHeaders: null
     }
 }
+
+module.exports = defaultBody

@@ -21,19 +21,19 @@ router.get('/', (req, res) => {
 })
 
 // auth routes
-router.post('/register', register)
-router.post('/login', login)
-router.post('/logout', authenticate, logout)
+router.post('/register', register) // create an account on this LBD server
+router.post('/login', login) // login on the LBD server (JWT)
+router.post('/logout', authenticate, logout) // logout
 
 // change to webID-based routes
-router.get('/:userName', authenticate, checkAccess, getUser)
-router.post('/:userName', authenticate, updateProfile)
-router.put('/:userName', authenticate, updateProfile)
-router.patch('/:userName', authenticate, updateProfile)
-router.delete('/:userName', authenticate, deleteProfile)
+router.get('/:userName', authenticate, checkAccess, getUser) // get user account data. (cf. solid webid)
+router.post('/:userName', authenticate, updateProfile) // update your user profile
+router.put('/:userName', authenticate, updateProfile) // idem
+router.patch('/:userName', authenticate, updateProfile) // idem
+router.delete('/:userName', authenticate, deleteProfile) // delete your profile. Your project is deleted when all collaborators have dismissed this project.
 
 // requires admin privileges
-router.get('/users', authenticateAdmin, getUsers)
+router.get('/users', authenticateAdmin, getUsers) // get all users
 router.get('/migrate', authenticateAdmin, migrateUrls) // in case of migration to another uri (e.g. from dev to production)
 
 

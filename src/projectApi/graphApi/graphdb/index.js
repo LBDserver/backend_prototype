@@ -22,6 +22,12 @@ const {
     getNameSpace
 } = require('./rdf4jAPI')
 
+const {
+    createGraphBody,
+    namedGraphMeta,
+    repoConfig
+} = require('./util')
+
 module.exports = {
     createRepository,
     getRepositories,
@@ -40,5 +46,8 @@ module.exports = {
     getNamedGraph,
     createNameSpace,
     deleteNameSpace,
-    getNameSpace
+    getNameSpace,
+    createGraphBody,
+    namedGraphMeta,
+    repoConfig
 }
