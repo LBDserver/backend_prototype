@@ -6,13 +6,11 @@ var fs = require('fs');
 
 const axios = require('axios')
 
-const gdbURI = 'http://localhost:7200'
-
 getRepositories = async () => {
     try {
         const options = {
             'method': 'GET',
-            'url': `${gdbURI}/rest/repositories`,
+            'url': `${process.env.GRAPHDB_URL}/rest/repositories`,
             'headers': {
                 'Accept': 'application/json'
             }
@@ -28,7 +26,7 @@ getRepository = async (id) => {
     try {
         const options = {
             'method': 'GET',
-            'url': `${gdbURI}/rest/repositories/${id}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
             'headers': {
                 'Accept': 'application/json'
             }
@@ -41,13 +39,13 @@ getRepository = async (id) => {
     }
 }
 
-createRepository = async (title) => {
+createRepository = async (doc) => {
     try {
-        let repoconfig = await repoConfig(title)
+        let repoconfig = repoConfig(doc.title, doc.id)
 
         var options = {
             'method': 'POST',
-            'url': 'http://localhost:7200/rest/repositories',
+            'url': `${process.env.GRAPHDB_URL}/rest/repositories`,
             'headers': {
                 'Content-Type': 'multipart/form-data'
             },
@@ -77,7 +75,7 @@ deleteRepository = async (id) => {
     try {
         const options = {
             'method': 'DELETE',
-            'url': `${gdbURI}/rest/repositories/${id}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
             'headers': {
                 'Accept': 'application/json'
             }

@@ -1,0 +1,25 @@
+@prefix : <https://lbdserver.org/test#>.
+@prefix bot: <https://w3id.org/bot#>.
+@prefix stg: <https://raw.githubusercontent.com/JWerbrouck/Thesis/master/stg.ttl#>.
+
+:AAtower a bot:Building; bot:hasStorey :Storey1, :Storey2, :Storey3 .
+
+:Space1 a bot:Space.
+
+:Space2 a bot:Space.
+
+:Space3 a bot:Space.
+
+:Space4 a bot:Space.
+
+:Space5 a bot:Space.
+
+:Storey1 a bot:Storey; bot:hasSpace :Space1, :Space2 .
+
+:Storey2 a bot:Storey; bot:hasSpace :Space3, :Space4 .
+
+:Storey3 a bot:Storey .
+
+:TechnologiePark a bot:Site; bot:hasBuilding :AAtower.
+
+:ZwijnaardeProject stg:hasSite :TechnologiePark.

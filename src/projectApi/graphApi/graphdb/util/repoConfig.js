@@ -1,7 +1,6 @@
 const {v4} = require('uuid')
 
-exports.repoConfig = function(title) {
-    const id = v4()
+exports.repoConfig = function(title, id) {
     return `#
     # RDF4J configuration template for a GraphDB Free repository
     #

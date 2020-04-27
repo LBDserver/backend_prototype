@@ -1,5 +1,5 @@
 const { model } = require('mongoose')
-const { User, Project, File, Graph } = require('../projectApi/documentApi/mongodb/models')
+const { User, Project, File } = require('../projectApi/documentApi/mongodb/models')
 
 checkPermissions = (req) => {
     return new Promise(async (resolve, reject) => {
@@ -7,9 +7,11 @@ checkPermissions = (req) => {
             const url = `${process.env.SERVER_URL}${req.originalUrl}`
             const user = req.user.url
             const requestedPermissions = setRequestedPermissions(req.method)
-            const resource = await getResource(url)
+            
+            // hardcoded for now
+            const acl = 'https://lbdserver.com/acl/public'
 
-            switch (resource.acl) {
+            switch (acl) {
                 case 'https://lbdserver.com/acl/public':
                     resolve()
                 case 'https://lbdserver.com/acl/private':
@@ -23,6 +25,7 @@ checkPermissions = (req) => {
                 default:
                     reject('default')
             }
+
         } catch (error) {
             console.log('error', error)
             reject(error)

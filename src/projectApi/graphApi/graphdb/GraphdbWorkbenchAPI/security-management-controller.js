@@ -12,7 +12,7 @@ getUsers = async (username, token) => {
     try {
         const options = {
             'method': 'GET',
-            'url': `${gdbURI}/rest/security/user`,
+            'url': `${process.env.GRAPHDB_URL}/rest/security/user`,
             'headers': {
                 'Accept': 'application/json'
             }
@@ -29,7 +29,7 @@ getUser = async (username, token) => {
     try {
         const options = {
             'method': 'GET',
-            'url': `${gdbURI}/rest/security/user/${username}`,
+            'url': `${process.env.GRAPHDB_URL}}/rest/security/user/${username}`,
             'headers': {
                 'Accept': 'application/json'
             }
@@ -47,7 +47,7 @@ createUser = async (username, password, token) => {
     try {
         const options = {
             'method': 'POST',
-            'url': `${gdbURI}/rest/security/user/${username}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
                 'X-GraphDB-Password': password,
@@ -71,7 +71,7 @@ deleteUser = async (username, token) => {
     try {
         const options = {
             'method': 'DELETE',
-            'url': `${gdbURI}/rest/security/user/${username}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Accept': 'application/json',
                 'Authorization': token
@@ -90,7 +90,7 @@ updateUser = async (username, password, body, token) => {
     try {
         const options = {
             'method': 'PUT',
-            'url': `${gdbURI}/rest/security/user/${username}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
                 'X-GraphDB-Password': password,

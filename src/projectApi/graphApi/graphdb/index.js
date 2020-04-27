@@ -15,8 +15,8 @@ const {
     queryRepository,
     updateRepositorySparql,
     createNamedGraph,
-    updateNamedGraph,
     deleteNamedGraph,
+    getNamedGraph,
     createNameSpace,
     deleteNameSpace,
     getNameSpace
@@ -36,8 +36,8 @@ module.exports = {
     queryRepository,
     updateRepositorySparql,
     createNamedGraph,
-    updateNamedGraph,
     deleteNamedGraph,
+    getNamedGraph,
     createNameSpace,
     deleteNameSpace,
     getNameSpace

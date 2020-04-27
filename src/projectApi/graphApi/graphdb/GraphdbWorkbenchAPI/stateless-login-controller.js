@@ -6,13 +6,11 @@ var fs = require('fs');
 
 const axios = require('axios')
 
-const gdbURI = 'http://localhost:7200'
-
 login = async (username, password) => {
     try {
         const options = {
             'method': 'POST',
-            'url': `${gdbURI}/rest/login/${username}`,
+            'url': `${process.env.GRAPHDB_URL}/rest/login/${username}`,
             'headers': {
                 'Accept': 'application/json',
                 'X-GraphDB-Password': password

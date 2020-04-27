@@ -1,0 +1,26 @@
+exports.defaultBody = function(name, context, baseURI, data) {
+    return {
+        name,
+        status: "NONE",
+        message: "",
+        context,
+        replaceGraphs: [],
+        baseURI,
+        forceSerial: false,
+        type: "text",
+        format: "text/turtle",
+        data,
+        timestamp: Date.now(),
+        parserSettings: {
+            "preserveBNodeIds": false,
+            "failOnUnknownDataTypes": false,
+            "verifyDataTypeValues": false,
+            "normalizeDataTypeValues": false,
+            "failOnUnknownLanguageTags": false,
+            "verifyLanguageTags": true,
+            "normalizeLanguageTags": false,
+            "stopOnError": true
+        },
+        xRequestIdHeaders: null
+    }
+}

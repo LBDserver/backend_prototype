@@ -6,13 +6,11 @@ var fs = require('fs');
 
 const axios = require('axios')
 
-const gdbURI = 'http://localhost:7200'
-
 queryRepository = async (id, query) => {
     try {
         const options = {
             'method': 'GET',
-            'url': `${gdbURI}/repositories/${id}?query=${query}`,
+            'url': `${process.env.GRAPHDB_URL}/repositories/${id}?query=${query}`,
             'headers': {
                 'Accept': 'application/sparql-results+xml'
             }
@@ -30,7 +28,7 @@ updateRepositorySparql = async (id, update) => {
     try {
         const options = {
             'method': 'POST',
-            'url': `${gdbURI}/repositories/${id}/statements?update=${update}`,
+            'url': `${process.env.GRAPHDB_URL}/repositories/${id}/statements?update=${update}`,
             'headers': {
                 'Accept': 'application/json'
             }

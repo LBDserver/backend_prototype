@@ -5,8 +5,8 @@ const {
 
 const {
     createNamedGraph,
-    updateNamedGraph,
-    deleteNamedGraph
+    deleteNamedGraph,
+    getNamedGraph
 } = require('./graph-store')
 
 const {
@@ -19,8 +19,8 @@ module.exports = {
     queryRepository,
     updateRepositorySparql,
     createNamedGraph,
-    updateNamedGraph,
     deleteNamedGraph,
+    getNamedGraph,
     createNameSpace,
     deleteNameSpace,
     getNameSpace

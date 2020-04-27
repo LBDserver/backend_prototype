@@ -3,7 +3,6 @@ const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 require('mongoose-type-url')
-
 const Project = require('./ProjectModel')
 const File = require('./FileModel')
 

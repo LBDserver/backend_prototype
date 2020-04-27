@@ -9,8 +9,11 @@ createProject = async (req, res) => {
         const documentData = await docStore.createProjectDoc({ ...req.body, owner})
 
         // create project repository graphdb
-        const graphData = await graphStore.createRepository(documentData.url)
+        const graphData = await graphStore.createRepository(documentData)
         
+        // create named graph for the project
+        const projectGraph = await graphStore.createNamedGraph(graphdData)
+
         // update graph with project information
         const pushProjectInfo = await graphStore.uploadNamedGraph()
         
