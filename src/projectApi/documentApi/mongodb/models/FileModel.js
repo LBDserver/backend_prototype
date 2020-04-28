@@ -14,18 +14,14 @@ const fileSchema = new mongoose.Schema({
         type: String,
         default: 'https://lbdserver.com/acl/private'
     },
-    description: {
-        type: String, 
-        required: true
-    },
     project:
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
             ref: "Project",
             required: true
         },
     owner: {
-        type: mongoose.SchemaTypes.ObjectId,
+        type: String,
         required: true
     }
 }, {

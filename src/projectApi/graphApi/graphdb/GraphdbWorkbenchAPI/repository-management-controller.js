@@ -71,7 +71,7 @@ createRepository = (title, id) => {
             request(options, function (error, response) {
                 if (error) throw new Error(error);
                 resolve(response.body)
-            });
+            }); 
 
         } catch (error) {
             console.log('error', error)

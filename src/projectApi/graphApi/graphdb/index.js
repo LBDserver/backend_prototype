@@ -2,21 +2,27 @@ const {
     createRepository,
     getRepositories,
     getRepository,
-    deleteRepository,
-    login,
-    getUser,
-    getUsers,
-    deleteUser,
-    updateUser,
-    createUser
+    deleteRepository
+    // login,
+    // getUser,
+    // getUsers,
+    // deleteUser,
+    // updateUser,
+    // createUser
 } = require('./GraphdbWorkbenchAPI')
 
 const {
     queryRepository,
     updateRepositorySparql,
+
     createNamedGraph,
     deleteNamedGraph,
     getNamedGraph,
+    getAllNamedGraphs,
+    replaceNamedGraph,
+    updateNamedGraph,
+    queryNamedGraph,
+
     createNameSpace,
     deleteNameSpace,
     getNameSpace
@@ -25,7 +31,8 @@ const {
 const {
     createGraphBody,
     namedGraphMeta,
-    repoConfig
+    repoConfig,
+    aclMeta
 } = require('./util')
 
 module.exports = {
@@ -33,21 +40,28 @@ module.exports = {
     getRepositories,
     getRepository,
     deleteRepository,
-    login,
-    getUser,
-    getUsers,
-    deleteUser,
-    updateUser,
-    createUser,
+
+    // login,
+    // getUser,
+    // getUsers,
+    // deleteUser,
+    // updateUser,
+    // createUser,
+
     queryRepository,
     updateRepositorySparql,
     createNamedGraph,
     deleteNamedGraph,
     getNamedGraph,
+    getAllNamedGraphs,
     createNameSpace,
     deleteNameSpace,
     getNameSpace,
     createGraphBody,
     namedGraphMeta,
+    aclMeta,
     repoConfig
+    // replaceNamedGraph,
+    // updateNamedGraph,
+    // queryNamedGraph
 }

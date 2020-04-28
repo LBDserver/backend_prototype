@@ -1,9 +1,10 @@
 const request = require('request');
 const defaultBody = require('../util/createGraphBody')
+const axios = require('axios')
 
-createNamedGraph = (repositoryId, { name, context, baseURI, data }, token) => {
+createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
     return new Promise((resolve, reject) => {
-        const body = JSON.stringify(defaultBody(name, context, baseURI, data))
+        const body = JSON.stringify(defaultBody(context, baseURI, data))
 
         try {
             var options = {
@@ -78,9 +79,26 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
     })
 }
 
+getAllNamedGraphs = (repositoryId, token) => {
+    return new Promise( async (resolve, reject) => {
+        try {
+            const options = {
+                'method': 'GET',
+                'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs`
+            };
+            const graphs = await axios(options)
+            console.log('graphs', graphs.data)
+            resolve(graphs.data)
+        } catch (error) { 
+            console.log('error', error)
+            reject(error)
+        }
+    })
+}
 
 module.exports = {
     createNamedGraph,
     deleteNamedGraph,
-    getNamedGraph
+    getNamedGraph,
+    getAllNamedGraphs
 }

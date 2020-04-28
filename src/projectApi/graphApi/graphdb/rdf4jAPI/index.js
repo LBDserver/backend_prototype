@@ -6,7 +6,8 @@ const {
 const {
     createNamedGraph,
     deleteNamedGraph,
-    getNamedGraph
+    getNamedGraph,
+    getAllNamedGraphs
 } = require('./graph-store')
 
 const {
@@ -23,5 +24,6 @@ module.exports = {
     getNamedGraph,
     createNameSpace,
     deleteNameSpace,
-    getNameSpace
+    getNameSpace,
+    getAllNamedGraphs
 }

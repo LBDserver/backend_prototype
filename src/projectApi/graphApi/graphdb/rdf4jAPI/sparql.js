@@ -12,11 +12,11 @@ queryRepository = async (id, query) => {
             'method': 'GET',
             'url': `${process.env.GRAPHDB_URL}/repositories/${id}?query=${query}`,
             'headers': {
-                'Accept': 'application/sparql-results+xml'
+                'Accept': 'application/sparql-results+json'
             }
         };
         const results = await axios(options)
-        return results
+        return results.data
     } catch (error) {
         console.log('error', error)
         throw new Error(error)

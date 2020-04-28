@@ -1,6 +1,6 @@
-defaultBody = (name, context, baseURI, data) => {
+defaultBody = (context, baseURI, data) => {
     return {
-        name,
+        name: context,
         status: "NONE",
         message: "",
         context,
