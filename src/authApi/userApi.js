@@ -25,14 +25,6 @@ login = async (req, res) => {
     }
 }
 
-guestLogin = async (req, res, next) => {
-    // experimental setup using webID inbox
-    // allows to access LBDserver from within solid pods and other LDP implementations
-    // first have a look at OIDC and WebId-OIDC.
-    // make new guest user instance
-    next()
-}
-
 logout = async (req, res) => {
     try {
         req.user.tokens = req.user.tokens.filter((token) => {
@@ -45,11 +37,6 @@ logout = async (req, res) => {
     } catch (error) {
         res.staus(500).send()
     }
-}
-
-guestLogout = async (req, res, next) => {
-    // remove the guest user instance
-    next()
 }
 
 logoutAll = async (req, res) => {

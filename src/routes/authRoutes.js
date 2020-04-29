@@ -26,7 +26,7 @@ router.post('/login', login) // login on the LBD server (JWT)
 router.post('/logout', authenticate, logout) // logout
 
 // change to webID-based routes
-router.get('/:userName', authenticate, checkAccess, getUser) // get user account data. (cf. solid webid)
+router.get('/:userName', authenticate, getUser) // get user account data. (cf. solid webid)
 router.post('/:userName', authenticate, updateProfile) // update your user profile
 router.put('/:userName', authenticate, updateProfile) // idem
 router.patch('/:userName', authenticate, updateProfile) // idem

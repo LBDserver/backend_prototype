@@ -10,20 +10,12 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    acl: {
-        type: String,
-        default: 'https://lbdserver.com/acl/private'
-    },
     project:
         {
             type: String,
             ref: "Project",
             required: true
-        },
-    owner: {
-        type: String,
-        required: true
-    }
+        }
 }, {
     timestamps: true
 })
