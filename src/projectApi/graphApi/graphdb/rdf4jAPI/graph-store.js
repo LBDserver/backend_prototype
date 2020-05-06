@@ -1,34 +1,38 @@
 const request = require('request');
 const defaultBody = require('../util/createGraphBody')
 const axios = require('axios')
+const FormData = require('form-data')
 
 createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
-    return new Promise((resolve, reject) => {
-        const body = JSON.stringify(defaultBody(context, baseURI, data))
-
+    return new Promise(async (resolve, reject) => {
         try {
-            var options = {
-                'method': 'POST',
+            const body = JSON.stringify(defaultBody(context, baseURI, data))
+
+            const options = {
+                'method': 'post',
                 'url': `http://localhost:7200/rest/data/import/upload/${repositoryId}/text`,
                 'headers': {
-                    'Content-Type': ['application/json', 'text/plain'],
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: body
+                data: body
             };
-            request(options, function (error, response) {
-                if (error) throw new Error(error);
-                resolve(response.body);
-            });
-        } catch (error) {
-            console.log('error', error)
-            reject(error)
+
+            const response = await axios(options)
+            resolve(response.data)
+
+        }  catch (error) {
+            if (error.response.data) {
+                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
+            } else {
+                reject({ reason: "Internal server error", status: 500 })
+            }
         }
     })
 }
 
 getNamedGraph = (namedGraph, repositoryId, token, format) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             const mimeTypes = {
                 "turtle": "text/turtle"
@@ -44,54 +48,60 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
                     'Authorization': `Bearer ${token}`
                 }
             };
-            request(options, function (error, response) {
-                if (error) throw new Error(error);
-                resolve(response.body);
-            });
-        } catch (error) {
-            console.log('error', error)
-            reject(error)
+            const response = await axios(options)
+            resolve(response.data)
+        }  catch (error) {
+            if (error.response.data) {
+                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
+            } else {
+                reject({ reason: "Internal server error", status: 500 })
+            }
         }
     })
 }
 
 deleteNamedGraph = (namedGraph, repositoryId, token) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
-            var options = {
-                'method': 'POST',
-                'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`,
-                'headers': {
-                    'Authorization': `Bearer ${token}`
-                },
-                formData: {
-                    'update': `CLEAR GRAPH <${namedGraph}>`
-                }
-            };
-            request(options, function (error, response) {
-                if (error) throw new Error(error);
-                resolve(response.body);
-            });
-        } catch (error) {
-            console.log('error', error)
-            reject(error)
+            console.log('test')
+            const formData = new FormData()
+            formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
+            const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
+            }
+
+            const response = await axios.post(url, formData, { headers })
+            console.log('response', response)
+            resolve(response.data)
+
+        }  catch (error) {
+            if (error.response.data) {
+                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
+            } else {
+                reject({ reason: "Internal server error", status: 500 })
+            }
         }
     })
 }
 
 getAllNamedGraphs = (repositoryId, token) => {
-    return new Promise( async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
             const options = {
                 'method': 'GET',
                 'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs`
             };
-            const graphs = await axios(options)
-            console.log('graphs', graphs.data)
-            resolve(graphs.data)
-        } catch (error) { 
-            console.log('error', error)
-            reject(error)
+            const response = await axios(options)
+            resolve(response.data)
+
+        } catch (error) {
+            if (error.response.data) {
+                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
+            } else {
+                reject({ reason: "Internal server error", status: 500 })
+            }
         }
     })
 }

@@ -2,11 +2,7 @@ const { repoConfig } = require('../util/repoConfig')
 const request = require('request');
 const FormData = require('form-data')
 var fs = require('fs');
-
-
 const axios = require('axios')
-
-const gdbURI = 'http://localhost:7200'
 
 getUsers = async (username, token) => {
     try {

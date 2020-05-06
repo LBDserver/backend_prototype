@@ -3,26 +3,26 @@ const docStore = require('./documentApi/mongodb')
 const path = require('path');
 const fs = require('fs');
 const util = require("util");
-
+const { File } = require('./documentApi/mongodb/models')
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
 createProject = async (req, res) => {
     try {
         const owner = req.user
         const { title, description, acl } = req.body
+        if (!title) {
+            throw { reason: "Please provide a title for the project", status: 400 }
+        }
+
         const fullTitle = `${owner.username}-${title}`
         const LBD_url = `${process.env.SERVER_URL}/project/${fullTitle}`
+
         if (owner.projects.some(item => item.LBD_url === LBD_url)) {
-            throw new Error('Project already exists')
+            throw { reason: "Project already exists", status: 409 }
         }
 
         const metaTitle = `${process.env.SERVER_URL}/default.meta`
         const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
-
-        // project title must be unique
-        if (req.user.projects.includes(repoUrl)) {
-            throw new Error('Project already exists. Please specify a unique name.')
-        }
 
         const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, owner.url, fullTitle, description)
         // create project repository graphdb
@@ -38,7 +38,11 @@ createProject = async (req, res) => {
         return res.status(201).json({ message: "Project repository and metadata graph created", url: repoUrl })
 
     } catch (error) {
-        return res.status(500).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -73,7 +77,7 @@ getAllProjects = async (req, res) => {
         return res.status(200).json({ projects: req.user.projects })
     } catch (error) {
         console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        return res.status(500).send({ error: error.message })
     }
 }
 
@@ -84,17 +88,26 @@ getOneProject = async (req, res) => {
         const owner = req.user
         const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/default.meta`, projectName, '', 'turtle')
         const allNamed = await graphStore.getAllNamedGraphs(projectName, '')
+        const files = await File.find({ project: `${process.env.SERVER_URL}/project/${projectName}` })
+        let documentUrls = []
+        files.forEach(file => {
+            documentUrls.push(file.url)
+        })
+
         let namedUris = []
         allNamed.results.bindings.forEach(result => {
             if (!result.contextID.value.endsWith('acl') && !result.contextID.value.endsWith('meta')) {
                 namedUris.push(result.contextID.value)
             }
         })
-        
-        return res.status(200).json({ projectGraph, contains: namedUris })
+
+        return res.status(200).json({ projectGraph, graphs: namedUris, documents: documentUrls })
     } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -114,9 +127,12 @@ deleteProject = async (req, res) => {
         await owner.save()
 
         return res.status(200).json({ message: `Project ${projectName} was deleted.` })
-    } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+    }   catch (error) {
+        if (error.reason) {
+            return res.status(error.status).send({error: error.reason})
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -135,8 +151,11 @@ queryProject = async (req, res) => {
             return res.status(204).send()
         }
     } catch (error) {
-        console.log('error', error)
-        return res.status(500).send(({ error: error.toString() }))
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -165,8 +184,11 @@ uploadDocumentToProject = async (req, res) => {
 
         return res.status(documentData.status).json({ url: documentData.file.url })
     } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -180,8 +202,11 @@ getDocumentFromProject = async (req, res) => {
 
         return res.status(file.status).json({ file: file.file })
     } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -189,12 +214,15 @@ deleteDocumentFromProject = async (req, res) => {
     try {
         const docUrl = await docStore.deleteDocument(req.params.fileId)
         const projectName = req.params.projectName
-        await graphStore.deleteNamedGraph(docUrl + '.meta' , projectName, '')
+        await graphStore.deleteNamedGraph(docUrl + '.meta', projectName, '')
 
         return res.status(200).send({ message: 'Document deleted' })
     } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -203,12 +231,18 @@ getNamedGraph = async (req, res) => {
     try {
         const projectId = req.params.projectName
         const namedGraph = req.query.graph
-    
+
         const graph = await graphStore.getNamedGraph(namedGraph, projectId, '', 'turtle')
+        if (!graph.length > 0) {
+            throw { reason: "Graph not found", status: 404 }
+        }
         return res.json({ graph })
     } catch (error) {
-        console.log('error', error)
-        return res.status(500).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -225,15 +259,23 @@ deleteNamedGraph = async (req, res) => {
             }
         })
 
+        if (!graphsToDelete.length > 0) {
+            throw { reason: "Graph not found", status: 404 }
+        }
+
         for await (graph of graphsToDelete) {
             graphStore.deleteNamedGraph(graph, projectName, '')
         }
 
         return res.status(200).json({ message: 'The named graph was successfully deleted' })
-        
+
     } catch (error) {
         console.log('error', error)
-        return res.status(500).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -255,8 +297,11 @@ createNamedGraph = async (req, res) => {
 
         return res.json({ message: `Successfully created the named graph with context ${context}` })
     } catch (error) {
-        console.log('error', error)
-        return res.status(404).send({ error: error.toString() })
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 
@@ -276,7 +321,7 @@ setAcl = (req) => {
                     baseURI: req.body.context + '.acl#',
                     data: req.files.acl[0].buffer.toString()
                 }
-    
+
                 customAcl = await graphStore.createNamedGraph(projectName, aclData, '')
                 customAclMetaData = await graphStore.aclMeta(aclData.context, req.user.url)
                 const aclMeta = {
@@ -284,7 +329,7 @@ setAcl = (req) => {
                     baseURI: req.body.context + '.acl.meta#',
                     data: customAclMetaData
                 }
-    
+
                 await graphStore.createNamedGraph(projectName, aclMeta, '')
                 acl = aclData.context
             }
@@ -311,14 +356,14 @@ setGraph = (req, projectName, acl) => {
                 data: req.files.graph[0].buffer.toString(),
                 acl
             }
-   
+
             await graphStore.createNamedGraph(projectName, graphData, '')
             console.log('created graph with context', graphData.context)
 
             resolve(graphData.context)
         } catch (error) {
-           reject(error) 
-        }  
+            reject(error)
+        }
     })
 }
 
@@ -333,7 +378,7 @@ setMetaGraph = (projectName, uri, acl, user, label, description) => {
                 label,
                 description
             }
-            
+
             await graphStore.createNamedGraph(projectName, graphMeta, '')
             console.log('created metadata graph with context', graphMeta.context)
             resolve(graphMeta.context)

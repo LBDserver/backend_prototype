@@ -41,7 +41,6 @@ getAcl = (req) => {
                 // if the project acl has multiple owners, all of them must agree on changing it.
                 // read acl file: CONTROL
                 // change acl file: CONTROL
-
             resolve(acl)
         } catch (error) {
             console.log('error', error)
