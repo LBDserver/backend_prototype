@@ -22,6 +22,7 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
             resolve(response.data)
 
         }  catch (error) {
+            console.log('error', error)
             if (error.response.data) {
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
@@ -63,7 +64,6 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
 deleteNamedGraph = (namedGraph, repositoryId, token) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log('test')
             const formData = new FormData()
             formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
             const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
@@ -73,7 +73,6 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
             }
 
             const response = await axios.post(url, formData, { headers })
-            console.log('response', response)
             resolve(response.data)
 
         }  catch (error) {

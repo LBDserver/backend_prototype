@@ -84,7 +84,6 @@ require('./mongoose')
 uploadDocuments = (projectName, data, user) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log('data', data)
             const projectUrl = `${process.env.SERVER_URL}/project/${projectName}`
             const file = new File({
                 main: data,

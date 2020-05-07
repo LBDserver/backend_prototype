@@ -18,7 +18,8 @@ aclMeta = (aclUrl, owner) => {
     @prefix lbd: <https://lbdserver.com/vocabulary#>. 
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>. 
     @prefix : <./>. 
-    <${aclUrl}> lbd:hasOwner <${owner}>.
+    <${aclUrl}> lbd:hasOwner <${owner}>;
+        lbd:isAcl "true".
     `
 
     data = data.replace(/\n/g, "")

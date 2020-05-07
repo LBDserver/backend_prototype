@@ -10,6 +10,7 @@ createProject = async (req, res) => {
     try {
         const owner = req.user
         const { title, description, acl } = req.body
+        
         if (!title) {
             throw { reason: "Please provide a title for the project", status: 400 }
         }
@@ -21,8 +22,9 @@ createProject = async (req, res) => {
             throw { reason: "Project already exists", status: 409 }
         }
 
-        const metaTitle = `${process.env.SERVER_URL}/default.meta`
-        const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
+        const metaTitle = `${process.env.SERVER_URL}/project/${fullTitle}/default.meta`
+        const repoUrl = `${process.env.SERVER_URL}/project/${fullTitle}`
+        // const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
 
         const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, owner.url, fullTitle, description)
         // create project repository graphdb
@@ -86,7 +88,7 @@ getOneProject = async (req, res) => {
     try {
         const projectName = req.params.projectName
         const owner = req.user
-        const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/default.meta`, projectName, '', 'turtle')
+        const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/project/${projectName}/default.meta`, projectName, '', 'turtle')
         const allNamed = await graphStore.getAllNamedGraphs(projectName, '')
         const files = await File.find({ project: `${process.env.SERVER_URL}/project/${projectName}` })
         let documentUrls = []
@@ -121,7 +123,7 @@ deleteProject = async (req, res) => {
         await graphStore.deleteRepository(projectName)
         // delete from list in document store (user)
         let newProjectList = owner.projects.filter(project => {
-            return project.Graph_url !== `${process.env.GRAPHDB_URL}/rest/repositories/${projectName}`
+            return project.Graph_url !== `${process.env.SERVER_URL}/project/${projectName}`
         })
         owner.projects = newProjectList
         await owner.save()
@@ -311,7 +313,7 @@ setAcl = (req) => {
             const projectName = req.params.projectName
             // default: if not specified, only the owner has access
             if (!req.body.acl && !req.files.acl) {
-                acl = 'https://lbdserver.com/acl/private'
+                acl = 'https://lbdserver.com/acl/private.acl'
 
             } else if (req.files.acl) {
                 console.log('custom acl detected')
@@ -334,9 +336,9 @@ setAcl = (req) => {
                 acl = aclData.context
             }
             else if (req.body.acl === 'private' || req.body.acl === 'https://lbdserver.com/acl/private') {
-                acl = 'https://lbdserver.com/acl/private'
+                acl = 'https://lbdserver.com/acl/private.acl'
             } else if (req.body.acl === 'public' || req.body.acl === 'https://lbdserver.com/acl/public') {
-                acl = 'https://lbdserver.com/acl/public'
+                acl = 'https://lbdserver.com/acl/public.acl'
             }
 
             resolve(acl)
