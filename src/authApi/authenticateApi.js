@@ -48,8 +48,12 @@ checkAccess = async (req, res, next) => {
         const accessPermitted = await checkPermissions(req)
         next()
     } catch (error) {
-        console.log('error', error)
-        res.status(403).send({ message: error })
+        try {
+            return res.status(error.status).send({ error: error.reason })
+        } catch (err) {
+            console.log('err', err)
+            return res.status(500).send({ error: error.message })
+        }
     }
 }
 

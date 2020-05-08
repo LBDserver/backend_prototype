@@ -1,0 +1,16 @@
+# ACL resource for the public folder
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix lbd: <https://lbdserver.com/vocabulary#>.
+
+# The owner has all permissions
+<#owner>
+    a acl:Authorization;
+    acl:agent <https://lbdserver.org/jwerbrouck>;
+    acl:mode acl:Read, acl:Write, acl:Control.
+
+# The public has read permissions
+<#public>
+    a acl:Authorization;
+    acl:agentGroup <https://lbdserver.org/groups#Accounting>;
+    acl:mode acl:Read.

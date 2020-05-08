@@ -19,6 +19,7 @@ queryRepository = (id, query) => {
             const results = await axios(options)
             resolve(results.data)
         } catch (error) {
+            console.log('error', error)
             if (error.response.data) {
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
