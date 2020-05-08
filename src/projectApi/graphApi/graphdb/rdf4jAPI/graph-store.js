@@ -1,4 +1,3 @@
-const request = require('request');
 const defaultBody = require('../util/createGraphBody')
 const axios = require('axios')
 const FormData = require('form-data')

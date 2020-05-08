@@ -1,3 +1,0 @@
-env file with url etc.
-implement graph functionality for 1 user
-prefer use of urls over _ids

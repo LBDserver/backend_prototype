@@ -134,7 +134,7 @@ UNION {?rule acl:mode ?permission;
                     } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentClass") {
                         if (item.agent.value === "https://lbdserver.com/vocabulary#Owner" && owners.includes(user)) {
                             allowedModes.add(item.permission.value)
-                        } else if (item.agent.value === "https://lbdserver.com/vocabulary#Agent") {
+                        } else if (item.agent.value === "https://lbdserver.com/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
                             allowedModes.add(item.permission.value)
                         }
                     } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentGroup") {

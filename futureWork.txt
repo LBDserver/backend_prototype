@@ -1,3 +1,0 @@
-stakeholder-based or project-based? => currently project based, stakeholders are decentralised.
-OIDC authentication (possibly with webID)
-cascade resource fetching: project descriptions store the other providers in the names of project stakeholders => a federated query can be sent to these providers to also query the graphs there (option: 'federated')
