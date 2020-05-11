@@ -45,14 +45,14 @@ authenticateAdmin = async (req, res, next) => {
 
 checkAccess = async (req, res, next) => {
     try {
-        const accessPermitted = await checkPermissions(req)
+        const allowed = await checkPermissions(req)
+        req.permissions = allowed
         next()
     } catch (error) {
         try {
             return res.status(error.status).send({ error: error.reason })
-        } catch (err) {
-            console.log('err', err)
-            return res.status(500).send({ error: error.message })
+        } catch (err) {            
+            return res.status(500).send({ error: error })
         }
     }
 }

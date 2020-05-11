@@ -1,6 +1,7 @@
 const defaultBody = require('../util/createGraphBody')
 const axios = require('axios')
 const FormData = require('form-data')
+const errorHandlerAxios = require('../../../../util/errorHandlerAxios')
 
 createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
     return new Promise(async (resolve, reject) => {
@@ -20,13 +21,9 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
             const response = await axios(options)
             resolve(response.data)
 
-        }  catch (error) {
-            console.log('error', error)
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+        } catch (error) {
+            const {reason, status} = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }
@@ -50,12 +47,9 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
             };
             const response = await axios(options)
             resolve(response.data)
-        }  catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+        } catch (error) {
+            const {reason, status} = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }
@@ -74,12 +68,9 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
             const response = await axios.post(url, formData, { headers })
             resolve(response.data)
 
-        }  catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+        } catch (error) {
+            const {reason, status} = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }
@@ -95,11 +86,8 @@ getAllNamedGraphs = (repositoryId, token) => {
             resolve(response.data)
 
         } catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+            const {reason, status} = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }

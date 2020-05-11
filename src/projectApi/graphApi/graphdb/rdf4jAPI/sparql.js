@@ -1,6 +1,7 @@
 const { repoConfig } = require('../util/repoConfig')
 const FormData = require('form-data')
 var fs = require('fs');
+const errorHandlerAxios = require('../../../../util/errorHandlerAxios')
 
 
 const axios = require('axios')
@@ -18,12 +19,8 @@ queryRepository = (id, query) => {
             const results = await axios(options)
             resolve(results.data)
         } catch (error) {
-            console.log('error', error)
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+            const { reason, status } = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }
@@ -41,12 +38,9 @@ updateRepositorySparql = (id, update) => {
             };
             response = await axios(options)
             resolve(response.data)
-        }  catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                reject({ reason: "Internal server error", status: 500 })
-            }
+        } catch (error) {
+            const { reason, status } = errorHandlerAxios(error)
+            reject({ reason, status })
         }
     })
 }

@@ -1,6 +1,7 @@
 const { model } = require('mongoose')
-const { User, Project, File } = require('../projectApi/documentApi/mongodb/models')
+const { User, Project, File } = require("../projectApi/documentApi/mongodb/models")
 const graphStore = require('../projectApi/graphApi/graphdb')
+const _ = require('lodash')
 
 checkPermissions = (req) => {
     return new Promise(async (resolve, reject) => {
@@ -8,24 +9,119 @@ checkPermissions = (req) => {
             const projectName = req.params.projectName
             const url = `${process.env.SERVER_URL}${req.originalUrl}`
             const type = await getType(url, req.path)
+
             const requestedPermissions = requestPermissions(req.method, url, type)
 
-            // if file is not acl
-            const { acl, owners } = await getAcl(req, url, type)
-            const permissions = await queryPermissions(req.user.url, acl, projectName, owners)
-            const allowed = requestedPermissions.some(r => permissions.has(r))
+            let allowed, permissions
+            // if type is query
+            let allowedGraphs = []
+            if (type === 'QUERY') {
+                let graphsToCheck = await allGraphs(req, projectName)
+                for await (graph of graphsToCheck) {
+                    let metaGraph
+                    if (graph.endsWith('.meta')) {
+                        metaGraph = graph
+                    } else {
+                        metaGraph = graph + '.meta'
+                    }
+
+                    const {acl, owners} = await findAclSparql(graph, metaGraph, projectName)
+                    permissions = await queryPermissions(req.user.url, acl, projectName, owners)
+                    allowed = requestedPermissions.some(r => permissions.has(r))
+                    if (allowed) {
+                        allowedGraphs.push(graph)
+                    }
+                }
+                let sparql
+                if (req.method === 'GET') { sparql = req.query.query }
+                else if (req.method === 'POST') { sparql = req.query.update }
+
+                queryNotChanged = graphsToCheck.some(r => allowedGraphs.includes(r))
+                console.log('queryNotChanged', queryNotChanged)
+
+                if (!queryNotChanged) {
+                    console.log('allowedGraphs', allowedGraphs)
+                    console.log('graphsToCheck', graphsToCheck)
+                    console.log('not all graphs allowed')
+                    throw {reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to', status: 401}
+                    newQuery = adaptQuery(sparql, allowedGraphs)
+                } else {
+                    resolve(allowed)
+                }
+
+            // default case (also when resource is ACL file (ends with .acl))
+            } else {
+                const { acl, owners } = await getAcl(req, url, type)
+                permissions = await queryPermissions(req.user.url, acl, projectName, owners)
+
+                allowed = requestedPermissions.some(r => permissions.has(r))
+            }
+
             if (allowed) {
-                resolve()
+                resolve(allowed)
             } else {
                 reject({ reason: "Operation not permitted: unauthorized", status: "401" })
             }
+
+        } catch (error) {
+            console.log('error', error)
+            reject(error)
+        }
+    })
+}
+
+adaptQuery = (query, graphs) => {
+    console.log('query', query)
+    console.log('graphs', graphs)
+}
+
+allGraphs = (request, project) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let sparql
+            if (request.method === 'GET') { sparql = request.query.query }
+            else if (request.method === 'POST') { sparql = request.query.update }
+
+            let namedGraphs = []
+            let queriedGraphs = []
+            // get a list of the named graphs in the repository
+            const allNamed = await graphStore.getAllNamedGraphs(project, '')
+            allNamed.results.bindings.forEach(result => {
+                const value = `<${result.contextID.value}>`
+                const realValue = result.contextID.value
+                // unless indicated in the request, acl and meta files are ignored
+                if (value.endsWith('acl>') && Object.keys(request.query).includes('acl') && request.query.acl === 'true') {
+                    namedGraphs.push(realValue)
+                    if (sparql.includes(value)) {
+                        queriedGraphs.push(realValue)
+                    }
+                } else if (value.endsWith('meta>') && Object.keys(request.query).includes('meta') && request.query.meta === 'true') {
+                    namedGraphs.push(realValue)
+                    if (sparql.includes(value)) {
+                        queriedGraphs.push(realValue)
+                    }
+                } else if (!value.endsWith('meta>') && !value.endsWith('acl>')) {
+                    namedGraphs.push(realValue)
+                    if (sparql.includes(value)) {
+                        queriedGraphs.push(realValue)
+                    }
+                }
+            })
+
+            // if no graphs are mentioned, all graphs are to be queried
+            if (!queriedGraphs.length) {
+                queriedGraphs = namedGraphs
+            }
+
+            resolve(queriedGraphs)
+
         } catch (error) {
             reject(error)
         }
     })
 }
 
-
+// restructure, do not pass req as a parameter!
 getAcl = (req, url, type) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -138,7 +234,6 @@ UNION {?rule acl:mode ?permission;
                             allowedModes.add(item.permission.value)
                         }
                     } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentGroup") {
-                        console.log('item.rel.value', item.rel.value)
                         const groupMembers = await findGroupMembers(item.agent.value, project)
                         if (groupMembers.includes(user)) {
                             allowedModes.add(item.permission.value)
@@ -165,6 +260,8 @@ getType = (fullUrl, path) => {
             type = 'FILE'
         } else if (pathParts[pathParts.length - 1] === 'graphs') {
             type = 'GRAPH'
+        } else if (pathParts[pathParts.length - 1] === 'query') {
+            type = 'QUERY'
         } else {
             reject({ reason: 'Could not determine the requested resource type', status: 500 })
         }
@@ -213,17 +310,23 @@ PREFIX lbd: <https://lbdserver.com/vocabulary#>
  <${subject}> lbd:hasOwner ?owner .
  }`
 
-            aclQuery = aclQuery.replace(/\n/g, " ")
-            const aclResults = await graphStore.queryRepository(project, encodeURIComponent(aclQuery))
+
+            let acl, owners
+            if (!subject.endsWith('.acl')) {
+                aclQuery = aclQuery.replace(/\n/g, " ")
+                const aclResults = await graphStore.queryRepository(project, encodeURIComponent(aclQuery))
+                acl = aclResults.results.bindings[0].acl.value
+            } else {
+                acl = subject
+            }
+
             const ownerResults = await graphStore.queryRepository(project, encodeURIComponent(ownerQuery))
-            console.log('aclResults', aclResults)
-            console.log('ownerResults', ownerResults)
-            let owners = []
+            owners = []
             ownerResults.results.bindings.forEach(item => {
                 owners.push(item.owner.value)
             })
 
-            resolve({ acl: aclResults.results.bindings[0].acl.value, owners })
+            resolve({ acl, owners })
         } catch (error) {
             reject(error)
         }

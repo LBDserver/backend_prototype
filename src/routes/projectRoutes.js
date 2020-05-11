@@ -18,7 +18,8 @@ const {
     deleteNamedGraph,
     updateNamedGraph,
     createNamedGraph,
-    replaceNamedGraph
+    replaceNamedGraph,
+    queryNamedGraph
 } = require('../projectApi')
 
 const { authenticate, checkAccess } = require('../authApi')

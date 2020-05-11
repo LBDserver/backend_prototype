@@ -52,7 +52,7 @@ logoutAll = async (req, res) => {
 updateProfile = async (req, res) => {
     try {
         const updates = Object.keys(req.body)
-        const allowedUpdates = ['name', 'email', 'password', 'age', 'webId']
+        const allowedUpdates = ['name', 'email', 'password', 'webId']
         const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
         if (!isValidOperation) {

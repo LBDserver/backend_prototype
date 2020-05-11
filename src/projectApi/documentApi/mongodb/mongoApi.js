@@ -92,11 +92,11 @@ uploadDocuments = (projectName, data, user) => {
 
             file.url = `${process.env.SERVER_URL}/project/${projectName}/files/${file._id}`
             await file.save()
-            resolve({ file, status: 200 })
+            console.log('file.url', file.url)
 
         } catch (error) {
             console.log('error', error)
-            reject(error)
+            reject({reason: `MongoDB error: ${error.message}`, status: 500})
         }
     })
 }
@@ -111,7 +111,7 @@ deleteDocument = (fileId) => {
             }
             resolve(document.url)
         } catch (error) {
-            reject(error)
+            reject({reason: `MongoDB error: ${error.message}`, status: 500})
         }
     })
 }
@@ -152,55 +152,53 @@ getDocument = async (projectName, fileId) => {
                 reject({ status: 404, message: 'File not found' })
             }
 
-            resolve({ file, status: 200 })
+            resolve(file)
 
         } catch (error) {
-            console.log('error', error)
-            reject(error)
+            reject({reason: `MongoDB error: ${error.message}`, status: 500})
         }
     })
 }
 
 // only admin
-migrateMongo = () => {
-    return new Promise(async (resolve, reject) => {
-        try {
+// migrateMongo = () => {
+//     return new Promise(async (resolve, reject) => {
+//         try {
 
-            if (newBaseUri.endsWith("/")) {
-                newBaseUri = newBaseUri.slice(0, -1);
-            }
+//             if (newBaseUri.endsWith("/")) {
+//                 newBaseUri = newBaseUri.slice(0, -1);
+//             }
 
-            let files = await File.find({})
-            const filePromises = files.map(async file => {
-                const url = `${process.env.SERVER_URL}/project/${file.project._id}/files/${file._id}`
-                file.url = url
-                await file.save()
-                return url
-            })
+//             let files = await File.find({})
+//             const filePromises = files.map(async file => {
+//                 const url = `${process.env.SERVER_URL}/project/${file.project._id}/files/${file._id}`
+//                 file.url = url
+//                 await file.save()
+//                 return url
+//             })
 
-            let projects = await Project.find({})
-            const projectPromises = projects.map(async project => {
-                const url = `${newBaseUri}/project/${project._id}`
-                project.url = url
-                await project.save()
-                return url
-            })
+//             let projects = await Project.find({})
+//             const projectPromises = projects.map(async project => {
+//                 const url = `${newBaseUri}/project/${project._id}`
+//                 project.url = url
+//                 await project.save()
+//                 return url
+//             })
 
-            await Promise.all(filePromises)
-            await Promise.all(projectPromises)
+//             await Promise.all(filePromises)
+//             await Promise.all(projectPromises)
 
-            resolve()
+//             resolve()
 
-        } catch (error) {
-            console.log('error', error)
-            reject(error)
-        }
-    })
-}
+//         } catch (error) {
+//             console.log('error', error)
+//             reject(error)
+//         }
+//     })
+// }
 
 module.exports = {
     uploadDocuments,
     deleteDocument,
     getDocument,
-    migrateMongo
 }

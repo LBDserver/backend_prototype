@@ -4,13 +4,16 @@ const path = require('path');
 const fs = require('fs');
 const util = require("util");
 const { File } = require('./documentApi/mongodb/models')
+const errorHandler = require('../util/errorHandler')
+
+
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
 createProject = async (req, res) => {
     try {
         const owner = req.user
         const { title, description, acl } = req.body
-        
+
         if (!title) {
             throw { reason: "Please provide a title for the project", status: 400 }
         }
@@ -40,11 +43,8 @@ createProject = async (req, res) => {
         return res.status(201).json({ message: "Project repository and metadata graph created", url: repoUrl })
 
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -78,8 +78,8 @@ getAllProjects = async (req, res) => {
     try {
         return res.status(200).json({ projects: req.user.projects })
     } catch (error) {
-        console.log('error', error)
-        return res.status(500).send({ error: error.message })
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -105,11 +105,8 @@ getOneProject = async (req, res) => {
 
         return res.status(200).json({ projectGraph, graphs: namedUris, documents: documentUrls })
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -129,12 +126,9 @@ deleteProject = async (req, res) => {
         await owner.save()
 
         return res.status(200).json({ message: `Project ${projectName} was deleted.` })
-    }   catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({error: error.reason})
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+    } catch (error) {
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -153,11 +147,8 @@ queryProject = async (req, res) => {
             return res.status(204).send()
         }
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -182,15 +173,12 @@ uploadDocumentToProject = async (req, res) => {
             label = req.body.label
         }
 
-        await setMetaGraph(projectName, documentData.file.url, acl, owner, label, description)
+        await setMetaGraph(projectName, documentData.url, acl, owner, label, description)
 
-        return res.status(documentData.status).json({ url: documentData.file.url })
+        return res.status(201).json({ url: documentData.url })
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -202,13 +190,10 @@ getDocumentFromProject = async (req, res) => {
         const owner = req.user.url
         const file = await docStore.getDocument(projectName, fileId)
 
-        return res.status(file.status).json({ file: file.file })
+        return res.status(200).json({ file })
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -220,11 +205,8 @@ deleteDocumentFromProject = async (req, res) => {
 
         return res.status(200).send({ message: 'Document deleted' })
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
@@ -272,18 +254,27 @@ deleteNamedGraph = async (req, res) => {
         return res.status(200).json({ message: 'The named graph was successfully deleted' })
 
     } catch (error) {
-        console.log('error', error)
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
 createNamedGraph = async (req, res) => {
     try {
         const projectName = req.params.projectName
+
+        // check if there is no such named graph yet
+        const graphName = req.body.context
+        let presentGraphs = []
+        const allNamed = await graphStore.getAllNamedGraphs(projectName, '')
+        allNamed.results.bindings.forEach(result => {
+            presentGraphs.push(result.contextID.value)
+        })
+
+        if (presentGraphs.includes(graphName)) {
+            throw { reason: 'A named graph with this context already exists', status: 409 }
+        }
+
         const acl = await setAcl(req)
         context = await setGraph(req, projectName, acl)
 
@@ -297,13 +288,10 @@ createNamedGraph = async (req, res) => {
 
         metaContext = await setMetaGraph(projectName, context, acl, req.user.url, label, description)
 
-        return res.json({ message: `Successfully created the named graph with context ${context}` })
+        return res.status(201).json({ message: `Successfully created the named graph with context ${context}` })
     } catch (error) {
-        if (error.reason) {
-            return res.status(error.status).send({ error: error.reason })
-        } else {
-            return res.status(500).send({ error: error.message })
-        }
+        const { reason, status } = errorHandler(error)
+        return res.status(status).send({ error: reason })
     }
 }
 
