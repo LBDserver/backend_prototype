@@ -327,10 +327,17 @@ setAcl = (req) => {
                 await graphStore.createNamedGraph(projectName, aclMeta, '')
                 acl = aclData.context
             }
-            else if (req.body.acl === 'private' || req.body.acl === 'https://lbdserver.com/acl/private') {
+            else if (req.body.acl === 'private' || req.body.acl === 'https://lbdserver.com/acl/private.acl') {
                 acl = 'https://lbdserver.com/acl/private.acl'
-            } else if (req.body.acl === 'public' || req.body.acl === 'https://lbdserver.com/acl/public') {
+            } else if (req.body.acl === 'public' || req.body.acl === 'https://lbdserver.com/acl/public.acl') {
                 acl = 'https://lbdserver.com/acl/public.acl'
+            } else {
+                try {
+                    await graphStore.getNamedGraph(req.body.acl, projectName, '', 'turtle')
+                    acl = req.body.acl
+                } catch (error) {
+                    throw {reason: 'acl does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files', status: 400}
+                }
             }
 
             resolve(acl)
