@@ -25,7 +25,7 @@ createProject = async (req, res) => {
             throw { reason: "Project already exists", status: 409 }
         }
 
-        const metaTitle = `${process.env.SERVER_URL}/project/${fullTitle}/default.meta`
+        const metaTitle = `${process.env.SERVER_URL}/project/${fullTitle}.meta`
         const repoUrl = `${process.env.SERVER_URL}/project/${fullTitle}`
         // const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
 
@@ -88,7 +88,7 @@ getOneProject = async (req, res) => {
     try {
         const projectName = req.params.projectName
         const owner = req.user
-        const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/project/${projectName}/default.meta`, projectName, '', 'turtle')
+        const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/project/${projectName}.meta`, projectName, '', 'turtle')
         const allNamed = await graphStore.getAllNamedGraphs(projectName, '')
         const files = await File.find({ project: `${process.env.SERVER_URL}/project/${projectName}` })
         let documentUrls = []
@@ -160,7 +160,7 @@ uploadDocumentToProject = async (req, res) => {
         const data = req.files.file[0].buffer
 
         // upload document
-        const documentData = await docStore.uploadDocuments(projectName, data, owner)
+        const documentUrl = await docStore.uploadDocuments(projectName, data, owner)
 
         // upload document metadata to the graph store
         const acl = await setAcl(req)
@@ -173,9 +173,9 @@ uploadDocumentToProject = async (req, res) => {
             label = req.body.label
         }
 
-        await setMetaGraph(projectName, documentData.url, acl, owner, label, description)
+        await setMetaGraph(projectName, documentUrl, acl, owner, label, description)
 
-        return res.status(201).json({ url: documentData.url })
+        return res.status(201).json({ url: documentUrl })
     } catch (error) {
         const { reason, status } = errorHandler(error)
         return res.status(status).send({ error: reason })

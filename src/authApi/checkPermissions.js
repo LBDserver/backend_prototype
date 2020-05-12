@@ -37,14 +37,9 @@ checkPermissions = (req) => {
                 else if (req.method === 'POST') { sparql = req.query.update }
 
                 queryNotChanged = graphsToCheck.some(r => allowedGraphs.includes(r))
-                console.log('queryNotChanged', queryNotChanged)
 
                 if (!queryNotChanged) {
-                    console.log('allowedGraphs', allowedGraphs)
-                    console.log('graphsToCheck', graphsToCheck)
-                    console.log('not all graphs allowed')
-                    throw {reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to', status: 401}
-                    newQuery = adaptQuery(sparql, allowedGraphs)
+                    reject({reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to.', status: 401})
                 } else {
                     resolve(allowed)
                 }
@@ -70,10 +65,21 @@ checkPermissions = (req) => {
     })
 }
 
-adaptQuery = (query, graphs) => {
-    console.log('query', query)
-    console.log('graphs', graphs)
-}
+// adaptQuery = (query, graphs) => {
+//     return new Promise((resolve, reject) => {
+//         try {
+//             console.log('query', query)
+//             console.log('graph', graph)
+//             let newQuery = query.split('where')
+//             console.log('newQuery', newQuery)
+//             resolve(newQuery)
+
+//         } catch (error) {
+//             reject()
+
+//         }
+//     })
+// }
 
 allGraphs = (request, project) => {
     return new Promise(async (resolve, reject) => {
@@ -133,12 +139,12 @@ getAcl = (req, url, type) => {
             switch (type) {
                 case 'PROJECT':
                     subject = url
-                    metaGraph = `${url}/default.meta`
+                    metaGraph = `${url}.meta`
                     break;
                 case 'GRAPH':
                     if (req.method == 'POST') {
                         subject = `${process.env.SERVER_URL}/project/${projectName}`
-                        metaGraph = subject + '/default.meta'
+                        metaGraph = subject + '.meta'
                     } else {
                         subject = graph
                         metaGraph = `${graph}.meta`
@@ -147,7 +153,7 @@ getAcl = (req, url, type) => {
                 case 'FILE':
                     if (req.method == 'POST') {
                         subject = `${process.env.SERVER_URL}/project/${projectName}`
-                        metaGraph = subject + '/default.meta'
+                        metaGraph = subject + '.meta'
                     } else {
                         subject = url
                         metaGraph = `${url}.meta`

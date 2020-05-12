@@ -92,8 +92,7 @@ uploadDocuments = (projectName, data, user) => {
 
             file.url = `${process.env.SERVER_URL}/project/${projectName}/files/${file._id}`
             await file.save()
-            console.log('file.url', file.url)
-
+            resolve(file.url)
         } catch (error) {
             console.log('error', error)
             reject({reason: `MongoDB error: ${error.message}`, status: 500})
