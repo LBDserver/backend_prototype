@@ -25,8 +25,9 @@ checkPermissions = (req) => {
                         metaGraph = graph + '.meta'
                     }
 
-                    const {acl, owners} = await findAclSparql(graph, metaGraph, projectName)
+                    const { acl, owners } = await findAclSparql(graph, metaGraph, projectName)
                     permissions = await queryPermissions(req.user.url, acl, projectName, owners)
+
                     allowed = requestedPermissions.some(r => permissions.has(r))
                     if (allowed) {
                         allowedGraphs.push(graph)
@@ -39,12 +40,12 @@ checkPermissions = (req) => {
                 queryNotChanged = graphsToCheck.some(r => allowedGraphs.includes(r))
 
                 if (!queryNotChanged) {
-                    reject({reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to.', status: 401})
+                    reject({ reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to.', status: 401 })
                 } else {
                     resolve(allowed)
                 }
 
-            // default case (also when resource is ACL file (ends with .acl))
+                // default case (also when resource is ACL file (ends with .acl))
             } else {
                 const { acl, owners } = await getAcl(req, url, type)
                 permissions = await queryPermissions(req.user.url, acl, projectName, owners)
@@ -300,23 +301,25 @@ PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
 findAclSparql = (subject, meta, project) => {
     return new Promise(async (resolve, reject) => {
         try {
+            if (subject.endsWith('meta')) {
+                meta = subject
+            }
+
             let aclQuery = `
 PREFIX lbd: <https://lbdserver.com/vocabulary#>
- SELECT ?acl
+ SELECT ?acl ?s
  FROM <${meta}>
  WHERE {
-    <${subject}> lbd:hasAcl ?acl.
+    ?s lbd:hasAcl ?acl.
  }`
 
             let ownerQuery = `
 PREFIX lbd: <https://lbdserver.com/vocabulary#>
- SELECT ?owner
+ SELECT ?owner ?s
  FROM <${meta}>
  WHERE {
- <${subject}> lbd:hasOwner ?owner .
+ ?s lbd:hasOwner ?owner .
  }`
-
-
             let acl, owners
             if (!subject.endsWith('.acl')) {
                 aclQuery = aclQuery.replace(/\n/g, " ")

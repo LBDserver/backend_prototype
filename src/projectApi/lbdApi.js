@@ -137,9 +137,13 @@ queryProject = async (req, res) => {
     try {
         if (req.method === 'GET') {
             const query = encodeURIComponent(req.query.query)
-            const projectName = req.params.projectName
-            const results = await graphStore.queryRepository(projectName, query)
-            return res.status(200).send({ results })
+            if (req.query.query.toLowerCase().includes('select') && !query.toLowerCase().includes('insert') && !query.toLowerCase().includes('delete')) {
+                const projectName = req.params.projectName
+                const results = await graphStore.queryRepository(projectName, query)
+                return res.status(200).send({ results })
+            } else {
+                throw {reason: 'This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries', status: 400}
+            }
         } else if (req.method === 'POST') {
             const update = encodeURIComponent(req.query.update)
             const projectName = req.params.projectName
