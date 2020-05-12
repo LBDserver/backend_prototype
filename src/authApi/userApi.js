@@ -16,12 +16,25 @@ register = async (req, res) => {
 
 login = async (req, res) => {
     try {
-        const user = await User.findByCredentials(req.body.email, req.body.password)
+        const {email, password} = decryptAuth(req.headers.authorization)
+        const user = await User.findByCredentials(email, password)
         const token = await user.generateAuthToken()
         res.send({ user, token })
     } catch (error) {
         console.log('error', error)
         res.status(400).send({ error })
+    }
+}
+
+decryptAuth = (base) => {
+    try {
+        const basic = base.split(' ')
+        console.log('basic', basic)
+        const [email, password] = Buffer.from(basic[1], 'base64').toString('ascii').split(':')
+        return {email, password}
+    } catch (error) {
+        console.log('error', error)
+        throw {reason: 'invalid username/password pair', status: 400}
     }
 }
 
