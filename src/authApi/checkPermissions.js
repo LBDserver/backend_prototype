@@ -40,7 +40,7 @@ checkPermissions = (req) => {
                 queryNotChanged = graphsToCheck.some(r => allowedGraphs.includes(r))
 
                 if (!queryNotChanged) {
-                    reject({ reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs that you have access to.', status: 401 })
+                    reject({ reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs to which you have access.', status: 401 })
                 } else {
                     resolve(allowed)
                 }

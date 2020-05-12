@@ -142,7 +142,7 @@ queryProject = async (req, res) => {
                 const results = await graphStore.queryRepository(projectName, query)
                 return res.status(200).send({ results })
             } else {
-                throw {reason: 'This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries', status: 400}
+                throw { reason: 'This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries', status: 400 }
             }
         } else if (req.method === 'POST') {
             const update = encodeURIComponent(req.query.update)
@@ -304,7 +304,7 @@ setAcl = (req) => {
         try {
             const projectName = req.params.projectName
             // default: if not specified, only the owner has access
-            if (!req.body.acl && !req.files.acl) {
+            if (!req.body.acl && !req.files.acl && !req.body.context.endsWith('.acl')) {
                 acl = 'https://lbdserver.com/acl/private.acl'
 
             } else if (req.files.acl) {
@@ -331,12 +331,14 @@ setAcl = (req) => {
                 acl = 'https://lbdserver.com/acl/private.acl'
             } else if (req.body.acl === 'public' || req.body.acl === 'https://lbdserver.com/acl/public.acl') {
                 acl = 'https://lbdserver.com/acl/public.acl'
+            } else if (req.body.context.endsWith('.acl')) {
+                acl = req.body.context
             } else {
                 try {
                     await graphStore.getNamedGraph(req.body.acl, projectName, '', 'turtle')
                     acl = req.body.acl
                 } catch (error) {
-                    throw {reason: 'acl does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files', status: 400}
+                    throw { reason: 'acl does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files', status: 400 }
                 }
             }
 
@@ -371,7 +373,12 @@ setGraph = (req, projectName, acl) => {
 setMetaGraph = (projectName, uri, acl, user, label, description) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const graphMetaData = await graphStore.namedGraphMeta(uri, acl, user, label, description)
+            let graphMetaData
+            if (uri.endsWith('.acl')) {
+                graphMetaData = await graphStore.aclMeta(uri, user)
+            } else {
+                graphMetaData = await graphStore.namedGraphMeta(uri, acl, user, label, description)
+            }
             const graphMeta = {
                 context: uri + '.meta',
                 baseURI: uri + '.meta#',
