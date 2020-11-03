@@ -5,7 +5,7 @@ const fs = require('fs');
 const util = require("util");
 const { File } = require('./documentApi/mongodb/models')
 const errorHandler = require('../util/errorHandler')
-
+import { v4 as uuidv4 } from 'uuid';
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -18,6 +18,7 @@ createProject = async (req, res) => {
             throw { reason: "Please provide a title for the project", status: 400 }
         }
 
+        const id = uuidv4()
         const fullTitle = `${owner.username}-${title}`
         const LBD_url = `${process.env.SERVER_URL}/project/${fullTitle}`
 

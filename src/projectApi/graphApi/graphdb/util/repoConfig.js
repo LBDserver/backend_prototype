@@ -18,7 +18,7 @@ exports.repoConfig = function(title, id) {
         rep:repositoryImpl [
             rep:repositoryType "graphdb:FreeSailRepository" ;
             sr:sailImpl [
-                sail:sailType "rdf4j:ShaclSail";
+                sail:sailType "graphdb:FreeSail";
                 shacl:validationEnabled "true" ;
                 shacl:logValidationPlans "false" ;
                 shacl:logValidationViolations "false" ;

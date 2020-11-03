@@ -71,6 +71,7 @@ createRepository = (title, id) => {
 
         }  catch (error) {
             if (error.response.data) {
+                console.log('error.response.data', error.response.data)
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
                 reject({ reason: "Internal server error", status: 500 })
