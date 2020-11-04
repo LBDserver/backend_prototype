@@ -30,10 +30,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    acl: {
-        type: String,
-        default: 'https://lbdserver.com/acl/public'
-    },
     password: {
         type: String,
         required: true,
@@ -56,10 +52,13 @@ const userSchema = new mongoose.Schema({
         }
     }],
     projects: [{
-        Graph_url: {
+        url: {
             type: String
         },
-        LBD_url: {
+        id: {
+            type: String
+        },
+        title: {
             type: String
         }
     }]

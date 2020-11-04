@@ -3,45 +3,43 @@ const docStore = require('./documentApi/mongodb')
 const path = require('path');
 const fs = require('fs');
 const util = require("util");
-const { File } = require('./documentApi/mongodb/models')
+const { File, Project } = require('./documentApi/mongodb/models')
 const errorHandler = require('../util/errorHandler')
-import { v4 as uuidv4 } from 'uuid';
+const { v4 } = require('uuid');
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
 createProject = async (req, res) => {
     try {
-        const owner = req.user
-        const { title, description, acl } = req.body
+        const creator = req.user
+        const { title, description } = req.body
 
         if (!title) {
             throw { reason: "Please provide a title for the project", status: 400 }
         }
 
-        const id = uuidv4()
-        const fullTitle = `${owner.username}-${title}`
-        const LBD_url = `${process.env.SERVER_URL}/project/${fullTitle}`
-
-        if (owner.projects.some(item => item.LBD_url === LBD_url)) {
-            throw { reason: "Project already exists", status: 409 }
-        }
-
-        const metaTitle = `${process.env.SERVER_URL}/project/${fullTitle}.meta`
-        const repoUrl = `${process.env.SERVER_URL}/project/${fullTitle}`
+        const id = v4()
+      
+        const metaTitle = `${process.env.DOMAIN_URL}/lbd/${id}.meta`
+        const repoUrl = `${process.env.DOMAIN_URL}/lbd/${id}`
         // const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
 
-        const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, owner.url, fullTitle, description)
+        const acl = process.env.DOMAIN_URL + '/' + id + '/.acl'
+        const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, creator, title, id, description)
+
         // create project repository graphdb
-        await graphStore.createRepository(fullTitle, fullTitle)
+        await graphStore.createRepository(title, id)
+
         // create its metadata named graph (which refers to acl etc.)
-        await graphStore.createNamedGraph(fullTitle, { name: repoUrl, context: metaTitle, baseURI: metaTitle, data: repoMetaData })
-        // save the project to the projects field of the owner (mongo)
-        owner.projects.push({ Graph_url: repoUrl, LBD_url })
-        await owner.save()
+        await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData })
 
-        await createDefaultAclGraphs(fullTitle)
+        // list the project in the projects field of the owner (mongodb) => TBD: register users in graphstore as webids
+        creator.projects.push({ url: repoUrl, id, title })
+        await creator.save()
 
-        return res.status(201).json({ message: "Project repository and metadata graph created", url: repoUrl })
+        await createDefaultAclGraph(id, creator, acl)
+
+        return res.status(201).json({ message: "Project repository and metadata graph created", url: repoUrl, id, title })
 
     } catch (error) {
         const { reason, status } = errorHandler(error)
@@ -50,23 +48,33 @@ createProject = async (req, res) => {
 }
 
 // helper function to upload the default acls at project initialisation. For now, these are the public and private graphs.
-createDefaultAclGraphs = (fullTitle) => {
+createDefaultAclGraph = (id, creator, aclUrl) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const directoryPath = path.join(process.cwd(), 'misc/acl_templates');
-            const readdir = util.promisify(fs.readdir)
-            const aclFiles = await readdir(directoryPath)
-            aclFiles.forEach(async function (file) {
-                const readFile = util.promisify(fs.readFile)
-                const data = await readFile(directoryPath + '/' + file, 'utf-8')
-                const aclData = {
-                    context: 'https://lbdserver.com/acl/' + file,
-                    baseURI: 'https://lbdserver.com/acl/' + file + '#',
-                    data
-                }
-                await graphStore.createNamedGraph(fullTitle, aclData, '')
-                resolve()
-            });
+
+            const data = `
+# Root ACL resource for LBDserver project with id ${id}
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix lbd: <https://lbdserver.com/vocabulary#>.
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+
+# The owner has all permissions
+<#owner>
+    a acl:Authorization;
+    acl:accessTo <${process.env.DOMAIN_URL + '/' + id}>;
+    acl:agent <${creator.url}>;
+    acl:mode acl:Read, acl:Write, acl:Control.
+
+<${creator.url}> vcard:email "${creator.email}".
+`
+            const aclData = {
+                context: aclUrl,
+                baseURI: aclUrl + '#',
+                data
+            }
+            await graphStore.createNamedGraph(id, aclData, '')
+            resolve()
+            
         } catch (error) {
             console.log('error', error)
             reject(error)
@@ -89,9 +97,9 @@ getOneProject = async (req, res) => {
     try {
         const projectName = req.params.projectName
         const owner = req.user
-        const projectGraph = await graphStore.getNamedGraph(`${process.env.SERVER_URL}/project/${projectName}.meta`, projectName, '', 'turtle')
+        const projectGraph = await graphStore.getNamedGraph(`${process.env.DOMAIN_URL}/lbd/${projectName}.meta`, projectName, '', 'turtle')
         const allNamed = await graphStore.getAllNamedGraphs(projectName, '')
-        const files = await File.find({ project: `${process.env.SERVER_URL}/project/${projectName}` })
+        const files = await File.find({ project: `${process.env.DOMAIN_URL}/lbd/${projectName}` })
         let documentUrls = []
         files.forEach(file => {
             documentUrls.push(file.url)
@@ -121,7 +129,7 @@ deleteProject = async (req, res) => {
         await graphStore.deleteRepository(projectName)
         // delete from list in document store (user)
         let newProjectList = owner.projects.filter(project => {
-            return project.Graph_url !== `${process.env.SERVER_URL}/project/${projectName}`
+            return project.Graph_url !== `${process.env.SERVER_URL}/lbd/${projectName}`
         })
         owner.projects = newProjectList
         await owner.save()
@@ -193,6 +201,7 @@ getDocumentFromProject = async (req, res) => {
         const projectName = req.params.projectName
         const fileId = req.params.fileId
         const owner = req.user.url
+        console.log('fileId', fileId)
         const file = await docStore.getDocument(projectName, fileId)
 
         return res.status(200).json({ file })
@@ -306,7 +315,7 @@ setAcl = (req) => {
             const projectName = req.params.projectName
             // default: if not specified, only the owner has access
             if (!req.body.acl && !req.files.acl && !req.body.context.endsWith('.acl')) {
-                acl = 'https://lbdserver.com/acl/private.acl'
+                acl =  `https://lbdserver.com/${projectName}/.acl`
 
             } else if (req.files.acl) {
                 console.log('custom acl detected')

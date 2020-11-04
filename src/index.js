@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes')
 
 app.use(express.json())
 
-app.use('/project', projectRoutes)
+app.use('/lbd', projectRoutes)
 app.use('/', authRoutes)
 
 // Server listening

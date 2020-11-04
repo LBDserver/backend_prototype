@@ -2,7 +2,8 @@ const User = require('../projectApi/documentApi/mongodb/models/UserModel')
 
 register = async (req, res) => {
     try {
-        const user = new User({...req.body, url: `${process.env.SERVER_URL}/${req.body.username}`})
+        const user = new User({...req.body, url: `${process.env.DOMAIN_URL}/${req.body.username}`})
+        
         // the user's webId should be validated if one is given! otherwise false. If no webId is given, the user gets a webId from the server.
 
         await user.save()

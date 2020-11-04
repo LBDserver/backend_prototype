@@ -7,7 +7,7 @@ checkPermissions = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             const projectName = req.params.projectName
-            const url = `${process.env.SERVER_URL}${req.originalUrl}`
+            const url = `${process.env.DOMAIN_URL}${req.originalUrl}`
             const type = await getType(url, req.path)
 
             const requestedPermissions = requestPermissions(req.method, url, type)
@@ -139,12 +139,13 @@ getAcl = (req, url, type) => {
 
             switch (type) {
                 case 'PROJECT':
-                    subject = url
+                    console.log('PROJECT')
+                    subject = `${url}.meta`
                     metaGraph = `${url}.meta`
                     break;
                 case 'GRAPH':
                     if (req.method == 'POST') {
-                        subject = `${process.env.SERVER_URL}/project/${projectName}`
+                        subject = `${process.env.DOMAIN_URL}/lbd/${projectName}`
                         metaGraph = subject + '.meta'
                     } else {
                         subject = graph
@@ -153,7 +154,7 @@ getAcl = (req, url, type) => {
                     break;
                 case 'FILE':
                     if (req.method == 'POST') {
-                        subject = `${process.env.SERVER_URL}/project/${projectName}`
+                        subject = `${process.env.DOMAIN_URL}/lbd/${projectName}`
                         metaGraph = subject + '.meta'
                     } else {
                         subject = url
@@ -261,7 +262,7 @@ getType = (fullUrl, path) => {
         let type
         urlParts = fullUrl.split('/')
         pathParts = path.split('/')
-        if (urlParts[urlParts.length - 2] === 'project') {
+        if (urlParts[urlParts.length - 2] === 'lbd') {
             type = 'PROJECT'
         } else if (pathParts[pathParts.length - 2] === 'files') {
             type = 'FILE'
@@ -305,6 +306,9 @@ findAclSparql = (subject, meta, project) => {
                 meta = subject
             }
 
+            console.log('project', project)
+            console.log('meta', meta)
+
             let aclQuery = `
 PREFIX lbd: <https://lbdserver.com/vocabulary#>
  SELECT ?acl ?s
@@ -323,6 +327,7 @@ PREFIX lbd: <https://lbdserver.com/vocabulary#>
             let acl, owners
             if (!subject.endsWith('.acl')) {
                 aclQuery = aclQuery.replace(/\n/g, " ")
+                console.log('aclQuery', aclQuery)
                 const aclResults = await graphStore.queryRepository(project, encodeURIComponent(aclQuery))
                 acl = aclResults.results.bindings[0].acl.value
             } else {

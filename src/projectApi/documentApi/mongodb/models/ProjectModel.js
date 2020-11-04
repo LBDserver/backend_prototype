@@ -3,7 +3,7 @@ require('mongoose-type-url')
 const File = require('./FileModel')
 
 const projectSchema = new mongoose.Schema({
-    url: {
+    id: {
         type: String,
         trim: true
     },
@@ -11,16 +11,8 @@ const projectSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    acl: {
-        type: String,
-        default: 'https://lbdserver.com/acl/private'
-    },
     description: {
         type: String, 
-        required: true
-    },
-    owner: {
-        type: mongoose.SchemaTypes.ObjectId,
         required: true
     }
 }, {

@@ -84,13 +84,13 @@ require('./mongoose')
 uploadDocuments = (projectName, data, user) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const projectUrl = `${process.env.SERVER_URL}/project/${projectName}`
+            const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`
             const file = new File({
                 main: data,
                 project: projectUrl
             })
 
-            file.url = `${process.env.SERVER_URL}/project/${projectName}/files/${file._id}`
+            file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file._id}`
             await file.save()
             resolve(file.url)
         } catch (error) {
@@ -144,7 +144,7 @@ deleteDocument = (fileId) => {
 getDocument = async (projectName, fileId) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const projectUrl = `${process.env.SERVER_URL}/project/${projectName}`
+            const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`
             const file = await File.findOne({ _id: fileId, project: projectUrl })
 
             if (!file) {
