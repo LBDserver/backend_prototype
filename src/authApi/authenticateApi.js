@@ -30,7 +30,7 @@ authenticateAdmin = async (req, res, next) => {
             throw new Error()
         }
 
-        if (user.email === 'admin@lbdserver.com') {
+        if (user.email === 'admin@lbdserver.org') {
             req.user = user
             req.token = token
             next()
@@ -45,12 +45,14 @@ authenticateAdmin = async (req, res, next) => {
 
 checkAccess = async (req, res, next) => {
     try {
-        console.log('123456')
-        const allowed = await basicPermissions(req)
-        console.log('object')
+        const {allowed, query} = await basicPermissions(req)
+        if (req.query.query && query) {
+            req.query.query = query
+        }
         req.permissions = allowed
         next()
     } catch (error) {
+        console.log('error', error)
         try {
             return res.status(error.status).send({ error: error.reason })
         } catch (err) {            

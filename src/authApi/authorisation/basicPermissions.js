@@ -10,18 +10,18 @@ basicPermissions = (req) => {
             const url = `${process.env.DOMAIN_URL}${req.originalUrl}`
 
             // determines the type of the request => project, graph, file, query
-            const type = await getType(url, req.path)
-            console.log('type', type)
+            const type = getType(url, req)
 
             // determines the permissions that are asked by the agent
             const requestedPermissions = requestPermissions(req.method, url, type)
-            console.log('requestedPermissions', requestedPermissions)
 
             let allowed, permissions
-            // if type is query
-            let allowedGraphs = []
-            if (type === 'QUERY') {
+
+           
+            if (req.query.query && type === "PROJECT") {
+                let allowedGraphs = []
                 let graphsToCheck = await allGraphs(req, projectName)
+
                 for await (graph of graphsToCheck) {
                     let metaGraph
                     if (graph.endsWith('.meta')) {
@@ -30,14 +30,16 @@ basicPermissions = (req) => {
                         metaGraph = graph + '.meta'
                     }
 
-                    const { acl, owners } = await findAclSparql(graph, metaGraph, projectName)
-                    permissions = await queryPermissions(req.user.url, acl, projectName, owners)
+                    const acl = await findAclSparql(graph, metaGraph, projectName)
+                    permissions = await queryPermissions(req.user.url, acl, projectName)
 
                     allowed = requestedPermissions.some(r => permissions.has(r))
+
                     if (allowed) {
                         allowedGraphs.push(graph)
                     }
                 }
+
                 let sparql
                 if (req.method === 'GET') { sparql = req.query.query }
                 else if (req.method === 'POST') { sparql = req.query.update }
@@ -45,61 +47,113 @@ basicPermissions = (req) => {
                 queryNotChanged = graphsToCheck.some(r => allowedGraphs.includes(r))
 
                 if (!queryNotChanged) {
-                    reject({ reason: 'You do not have permission to query all these graphs. Please consider to be more specific or only include graphs to which you have access.', status: 401 })
+                    const newQuery = await adaptQuery(sparql, allowedGraphs)
+                    resolve({allowed, query: newQuery})
                 } else {
-                    resolve(allowed)
+                    resolve({allowed})
                 }
 
                 // default case (also when resource is ACL file (ends with .acl))
             } else {
+                const acl = await getAcl(req, url, type)
+                console.log('acl', acl)
+                permissions = await queryPermissions(req.user, acl, projectName)
 
-                const { acl, owners } = await getAcl(req, url, type)
-                console.log('acl, owners', acl, owners)
-
-                permissions = await queryPermissions(req.user.url, acl, projectName, owners)
-                console.log('permissions', permissions)
-
-                // see if all requested permissions are present in the actual permitted operations
+                                // see if all requested permissions are present in the actual permitted operations
                 allowed = requestedPermissions.some(r => permissions.has(r))
             }
 
             if (allowed) {
-                resolve(allowed)
+                resolve({allowed})
             } else {
                 reject({ reason: "Operation not permitted: unauthorized", status: "401" })
             }
         } catch (error) {
-            console.log('error', error)
             reject(error)
         }
     })
 }
 
-// adaptQuery = (query, graphs) => {
-//     return new Promise((resolve, reject) => {
-//         try {
-//             console.log('query', query)
-//             console.log('graph', graph)
-//             let newQuery = query.split('where')
-//             console.log('newQuery', newQuery)
-//             resolve(newQuery)
+getType = (fullUrl, req) => {
+    let type
+    const path = req.path
+    urlParts = fullUrl.split('/')
+    pathParts = path.split('/')
+    if (pathParts[pathParts.length - 2] === 'files') {
+        type = 'FILE'
+    // } else if (req.query.query) {
+    //     type = 'QUERY'
+    } else if (pathParts[pathParts.length - 2] === 'graphs' || pathParts[pathParts.length - 1] === 'graphs') {
+        type = 'GRAPH'
+    } else {
+        type = 'PROJECT'
+    }
+    return type
+}
 
-//         } catch (error) {
-//             reject()
+requestPermissions = (method, url, type) => {
+    let permissions = []
+    if (url.endsWith('.acl') || url.endsWith('.meta')) {
+        permissions.push('http://www.w3.org/ns/auth/acl#Control')
+    } else {
+        switch (method) {
+            case 'GET':
+            case 'HEAD':
+                permissions.push('http://www.w3.org/ns/auth/acl#Read')
+                break;
+            case 'PUT':
+            case 'PATCH':
+                permissions.push('http://www.w3.org/ns/auth/acl#Append')
+                permissions.push('http://www.w3.org/ns/auth/acl#Read')
+                break;
+            case 'POST':
+            case 'DELETE':
+                permissions.push('http://www.w3.org/ns/auth/acl#Write')
+                permissions.push('http://www.w3.org/ns/auth/acl#Read')
+                if (type === 'PROJECT') {
+                    permissions.push('http://www.w3.org/ns/auth/acl#Control')
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return permissions
+}
 
-//         }
-//     })
-// }
+adaptQuery = (query, graphs) => {
+    return new Promise((resolve, reject) => {
+        try {
+            console.log('query', query)
+            console.log('graph', graphs)
+            let splitQuery = query.split('where')
+            if (splitQuery.length <= 1) {
+                splitQuery = query.split('WHERE')
+            }
+            console.log('splitQuery', splitQuery)
+            graphs.forEach(graph => {
+                splitQuery[0] = splitQuery[0] + `FROM <${graph}> `
+            })
+
+            const newQuery = splitQuery[0] + "WHERE" + splitQuery[1]
+            console.log('newQuery', newQuery)
+            resolve(newQuery)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 
 allGraphs = (request, project) => {
     return new Promise(async (resolve, reject) => {
         try {
             let sparql
             if (request.method === 'GET') { sparql = request.query.query }
-            else if (request.method === 'POST') { sparql = request.query.update }
+            //else if (request.method === 'POST') { sparql = request.query.update }
 
             let namedGraphs = []
             let queriedGraphs = []
+
             // get a list of the named graphs in the repository
             const allNamed = await graphStore.getAllNamedGraphs(project, '')
             allNamed.results.bindings.forEach(result => {
@@ -144,13 +198,14 @@ getAcl = (req, url, type) => {
 
             let metaGraph, subject
             const projectName = req.params.projectName
-            const graph = req.query.graph
+            const graphId = req.params.graphId
+            const graph = process.env.DOMAIN_URL + '/lbd/' + projectName + '/graphs/' + graphId
+
 
             switch (type) {
                 case 'PROJECT':
-                    console.log('PROJECT')
-                    subject = `${url}/.meta`
-                    metaGraph = `${url}/.meta`
+                    subject = `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`
+                    metaGraph = `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`
                     break;
                 case 'GRAPH':
                     if (req.method == 'POST') {
@@ -174,8 +229,8 @@ getAcl = (req, url, type) => {
                     throw { reason: 'Could not find the meta graph', status: 500 }
             }
 
-            const { acl, owners } = await findAclSparql(subject, metaGraph, projectName)
-            resolve({ acl, owners })
+            const acl = await findAclSparql(subject, metaGraph, projectName)
+            resolve(acl)
 
         } catch (error) {
             reject(error)
@@ -183,81 +238,60 @@ getAcl = (req, url, type) => {
     })
 }
 
-requestPermissions = (method, url, type) => {
-    let permissions = []
-    if (url.endsWith('.acl') || url.endsWith('.meta')) {
-        permissions.push('http://www.w3.org/ns/auth/acl#Control')
-    } else {
-        switch (method) {
-            case 'GET':
-            case 'HEAD':
-                permissions.push('http://www.w3.org/ns/auth/acl#Read')
-                break;
-            case 'PUT':
-            case 'PATCH':
-                permissions.push('http://www.w3.org/ns/auth/acl#Append')
-                permissions.push('http://www.w3.org/ns/auth/acl#Read')
-                break;
-            case 'POST':
-            case 'DELETE':
-                permissions.push('http://www.w3.org/ns/auth/acl#Write')
-                permissions.push('http://www.w3.org/ns/auth/acl#Read')
-                if (type === 'PROJECT') {
-                    permissions.push('http://www.w3.org/ns/auth/acl#Control')
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    return permissions
-}
-
-queryPermissions = (user, acl, project, owners) => {
+queryPermissions = (user, acl, project) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let query = `
- PREFIX lbd: <https://lbdserver.com/vocabulary#>
- PREFIX acl: <http://www.w3.org/ns/auth/acl#>
- SELECT ?permission ?agent ?rel
- FROM <${acl}>
- WHERE {
-    {?rule acl:mode ?permission;
-        acl:agent ?agent .
-        BIND (acl:agent AS ?rel)
-    }
-UNION {?rule acl:mode ?permission;
-        acl:agentClass ?agent .
-        BIND (acl:agentClass AS ?rel)
-    }
-UNION {?rule acl:mode ?permission;
-        acl:agentGroup ?agent .
-        BIND (acl:agentGroup AS ?rel)
-    }
-}`
-            query = query.replace(/\n/g, "")
-            const results = await graphStore.queryRepository(project, encodeURIComponent(query))
 
+            // 1. query for agents or their e-mail
+            let agentQuery = `
+            PREFIX lbd: <https://lbdserver.org/vocabulary#>
+            PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            
+            SELECT ?permission ?agent ?email
+            FROM <${acl}>
+            WHERE 
+                {?rule acl:mode ?permission;
+                    acl:agent ?agent .
+            
+                    ?agent vcard:email ?email
+            }
+            `
+            agentQuery = agentQuery.replace(/\n/g, "")
             let allowedModes = new Set()
 
-            for await (item of results.results.bindings) {
-                {
-                    if (item.rel.value === "http://www.w3.org/ns/auth/acl#agent" && item.agent.value == user) {
-                        allowedModes.add(item.permission.value)
-                    } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentClass") {
-                        if (item.agent.value === "https://lbdserver.com/vocabulary#Owner" && owners.includes(user)) {
-                            allowedModes.add(item.permission.value)
-                        } else if (item.agent.value === "https://lbdserver.com/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
-                            allowedModes.add(item.permission.value)
-                        }
-                    } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentGroup") {
-                        const groupMembers = await findGroupMembers(item.agent.value, project)
-                        if (groupMembers.includes(user)) {
-                            allowedModes.add(item.permission.value)
-                        }
-                    }
+            const agentResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
+            for await (item of agentResults.results.bindings) {
+                if (item.agent.value === user.url || item.agent.email === user.email) {
+                    allowedModes.add(item.permission.value)
                 }
             }
+
+            // 2. query for agentClasses
+
+
+            // 3. query for agentGroups
+
+
+
+            // for await (item of results.results.bindings) {
+            //     {
+            //         if (item.rel.value === "http://www.w3.org/ns/auth/acl#agent" && item.agent.value == user.url) {
+            //             allowedModes.add(item.permission.value)
+            //         } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentClass") {
+            //             if (item.agent.value === "https://lbdserver.org/vocabulary#Owner" && owners.includes(user.url)) {
+            //                 allowedModes.add(item.permission.value)
+            //             } else if (item.agent.value === "https://lbdserver.org/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
+            //                 allowedModes.add(item.permission.value)
+            //             }
+            //         } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentGroup") {
+            //             const groupMembers = await findGroupMembers(item.agent.value, project)
+            //             if (groupMembers.includes(user)) {
+            //                 allowedModes.add(item.permission.value)
+            //             }
+            //         }
+            //     }
+            // }
 
             resolve(allowedModes)
         } catch (error) {
@@ -266,25 +300,7 @@ UNION {?rule acl:mode ?permission;
     })
 }
 
-getType = (fullUrl, path) => {
-    return new Promise((resolve, reject) => {
-        let type
-        urlParts = fullUrl.split('/')
-        pathParts = path.split('/')
-        if (urlParts[urlParts.length - 2] === 'lbd') {
-            type = 'PROJECT'
-        } else if (pathParts[pathParts.length - 2] === 'files') {
-            type = 'FILE'
-        } else if (pathParts[pathParts.length - 1] === 'graphs') {
-            type = 'GRAPH'
-        } else if (pathParts[pathParts.length - 1] === 'query') {
-            type = 'QUERY'
-        } else {
-            reject({ reason: 'Could not determine the requested resource type', status: 500 })
-        }
-        resolve(type)
-    })
-}
+
 
 // agent groups are local here
 findGroupMembers = (groupUri, project) => {
@@ -315,46 +331,31 @@ findAclSparql = (subject, meta, project) => {
                 meta = subject
             }
 
-            console.log('project', project)
-            console.log('subject', subject)
             console.log('meta', meta)
-
             let aclQuery = `
-PREFIX lbd: <https://lbdserver.com/vocabulary#>
+PREFIX lbd: <https://lbdserver.org/vocabulary#>
  SELECT ?acl ?s
  FROM <${meta}>
  WHERE {
     ?s lbd:hasAcl ?acl.
  }`
 
-            let ownerQuery = `
-PREFIX lbd: <https://lbdserver.com/vocabulary#>
- SELECT ?owner ?s
- FROM <${meta}>
- WHERE {
- ?s lbd:hasOwner ?owner .
- }`
-            let acl, owners
+            let acl
             if (!subject.endsWith('.acl')) {
                 aclQuery = aclQuery.replace(/\n/g, " ")
                 console.log('aclQuery', aclQuery)
                 const aclResults = await graphStore.queryRepository(project, encodeURIComponent(aclQuery))
                 acl = aclResults.results.bindings[0].acl.value
+
             } else {
                 acl = subject
             }
 
-            const ownerResults = await graphStore.queryRepository(project, encodeURIComponent(ownerQuery))
-            owners = []
-            ownerResults.results.bindings.forEach(item => {
-                owners.push(item.owner.value)
-            })
-
-            resolve({ acl, owners })
+            resolve(acl)
         } catch (error) {
             reject(error)
         }
     })
 }
 
-module.exports = { basicPermissions }
+module.exports = { basicPermissions, adaptQuery }

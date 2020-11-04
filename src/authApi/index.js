@@ -1,7 +1,7 @@
 const {authenticate, authenticateAdmin, checkAccess} = require('./authenticateApi')
 const { register, login, logout, deleteProfile, getUser, updateProfile, logoutAll } = require('./userApi')
 const { getUsers, getUserById, migrateUrls} = require('./adminApi')
-const {checkPermissions} = require('./authorisation/checkPermissions')
+const {basicPermissions} = require('./authorisation/basicPermissions')
 
 module.exports = {
     register,
@@ -16,6 +16,6 @@ module.exports = {
     authenticateAdmin,
     getUserById,
     migrateUrls,
-    checkPermissions,
+    basicPermissions,
     checkAccess
 }

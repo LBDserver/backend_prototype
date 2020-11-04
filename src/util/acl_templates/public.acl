@@ -1,7 +1,7 @@
 # ACL resource for the public folder
 @prefix acl: <http://www.w3.org/ns/auth/acl#>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
-@prefix lbd: <https://lbdserver.com/vocabulary#>.
+@prefix lbd: <https://lbdserver.org/vocabulary#>.
 
 # The owner has all permissions
 <#owner>

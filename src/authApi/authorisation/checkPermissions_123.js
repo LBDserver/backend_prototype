@@ -51,6 +51,7 @@ checkPermissions = (req) => {
                 permissions = await queryPermissions(req.user.url, acl, projectName, owners)
 
                 allowed = requestedPermissions.some(r => permissions.has(r))
+                
             }
 
             if (allowed) {
@@ -208,7 +209,7 @@ queryPermissions = (user, acl, project, owners) => {
     return new Promise(async (resolve, reject) => {
         try {
             let query = `
- PREFIX lbd: <https://lbdserver.com/vocabulary#>
+ PREFIX lbd: <https://lbdserver.org/vocabulary#>
  PREFIX acl: <http://www.w3.org/ns/auth/acl#>
  SELECT ?permission ?agent ?rel
  FROM <${acl}>
@@ -236,9 +237,9 @@ UNION {?rule acl:mode ?permission;
                     if (item.rel.value === "http://www.w3.org/ns/auth/acl#agent" && item.agent.value == user) {
                         allowedModes.add(item.permission.value)
                     } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentClass") {
-                        if (item.agent.value === "https://lbdserver.com/vocabulary#Owner" && owners.includes(user)) {
+                        if (item.agent.value === "https://lbdserver.org/vocabulary#Owner" && owners.includes(user)) {
                             allowedModes.add(item.permission.value)
-                        } else if (item.agent.value === "https://lbdserver.com/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
+                        } else if (item.agent.value === "https://lbdserver.org/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
                             allowedModes.add(item.permission.value)
                         }
                     } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentGroup") {
@@ -310,7 +311,7 @@ findAclSparql = (subject, meta, project) => {
             console.log('meta', meta)
 
             let aclQuery = `
-PREFIX lbd: <https://lbdserver.com/vocabulary#>
+PREFIX lbd: <https://lbdserver.org/vocabulary#>
  SELECT ?acl ?s
  FROM <${meta}>
  WHERE {
@@ -318,7 +319,7 @@ PREFIX lbd: <https://lbdserver.com/vocabulary#>
  }`
 
             let ownerQuery = `
-PREFIX lbd: <https://lbdserver.com/vocabulary#>
+PREFIX lbd: <https://lbdserver.org/vocabulary#>
  SELECT ?owner ?s
  FROM <${meta}>
  WHERE {

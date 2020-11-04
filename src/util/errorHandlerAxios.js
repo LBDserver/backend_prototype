@@ -1,5 +1,4 @@
 errorHandlerAxios = (error) => {
-    console.log('error', error)
     try {
         return { reason: `Graph Database error: ${error.response.data}`, status: error.response.status }
     } catch (error) {

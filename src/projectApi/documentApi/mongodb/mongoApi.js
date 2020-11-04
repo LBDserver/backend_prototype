@@ -1,6 +1,8 @@
 const { Project, File } = require('./models')
 const { checkPermissions } = require('../../../authApi')
 require('./mongoose')
+const { v4 } = require('uuid');
+
 
 // owned by current user
 // createProjectDoc = (body) => {
@@ -85,12 +87,14 @@ uploadDocuments = (projectName, data, user) => {
     return new Promise(async (resolve, reject) => {
         try {
             const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`
+            const fileId = v4()
             const file = new File({
                 main: data,
-                project: projectUrl
+                project: projectUrl,
+                id: fileId
             })
 
-            file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file._id}`
+            file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file.id}`
             await file.save()
             resolve(file.url)
         } catch (error) {
