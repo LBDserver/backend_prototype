@@ -1,6 +1,6 @@
 const { model } = require('mongoose')
-const { User, Project, File } = require("../projectApi/documentApi/mongodb/models")
-const graphStore = require('../projectApi/graphApi/graphdb')
+const { User, Project, File } = require("../../projectApi/documentApi/mongodb/models")
+const graphStore = require('../../projectApi/graphApi/graphdb')
 const _ = require('lodash')
 
 checkPermissions = (req) => {

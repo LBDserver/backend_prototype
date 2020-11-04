@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { checkPermissions } = require('./checkPermissions')
+const { basicPermissions } = require('./authorisation/basicPermissions')
 const User = require('../projectApi/documentApi/mongodb/models/UserModel')
 const Project = require('../projectApi/documentApi/mongodb/models/ProjectModel')
 
@@ -45,7 +45,9 @@ authenticateAdmin = async (req, res, next) => {
 
 checkAccess = async (req, res, next) => {
     try {
-        const allowed = await checkPermissions(req)
+        console.log('123456')
+        const allowed = await basicPermissions(req)
+        console.log('object')
         req.permissions = allowed
         next()
     } catch (error) {
