@@ -233,7 +233,6 @@ deleteDocumentFromProject = async (req, res) => {
 }
 
 //////////////////////////// NAMED GRAPHS API ///////////////////////////////
-
 createNamedGraph = async (req, res) => {
     try {
         const projectName = req.params.projectName

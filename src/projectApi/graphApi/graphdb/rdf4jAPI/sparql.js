@@ -13,9 +13,11 @@ queryRepository = (id, query) => {
                 'method': 'GET',
                 'url': `${process.env.GRAPHDB_URL}/repositories/${id}?query=${query}`,
                 'headers': {
-                    'Accept': 'application/sparql-results+json'
+                    'Accept': 'application/sparql-results+json',
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
+            console.log('options', options)
             const results = await axios(options)
             resolve(results.data)
         } catch (error) {
@@ -33,7 +35,8 @@ updateRepositorySparql = (id, update) => {
                 'method': 'POST',
                 'url': `${process.env.GRAPHDB_URL}/repositories/${id}/statements?update=${update}`,
                 'headers': {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
             response = await axios(options)

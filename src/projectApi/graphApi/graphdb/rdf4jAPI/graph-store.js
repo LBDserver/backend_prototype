@@ -13,7 +13,7 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
                 'url': `http://localhost:7200/rest/data/import/upload/${repositoryId}/text`,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': process.env.GDB_ADMIN
                 },
                 data: body
             };
@@ -31,6 +31,7 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
 getNamedGraph = (namedGraph, repositoryId, token, format) => {
     return new Promise(async (resolve, reject) => {
         try {
+            console.log('getting')
             const mimeTypes = {
                 "turtle": "text/turtle"
             }
@@ -42,9 +43,11 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
                 'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs/service?graph=${namedGraph}\n`,
                 'headers': {
                     'Accept': `${mimeType}`,
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
+
+            console.log('options', options)
             const response = await axios(options)
             resolve(response.data)
         } catch (error) {
@@ -61,7 +64,7 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
             formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
             const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
             const headers = {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': process.env.GDB_ADMIN,
                 'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
             }
 
@@ -80,7 +83,10 @@ getAllNamedGraphs = (repositoryId, token) => {
         try {
             const options = {
                 'method': 'GET',
-                'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs`
+                'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs`,
+                'headers': {
+                    'Authorization': process.env.GDB_ADMIN
+                }
             };
             const response = await axios(options)
             resolve(response.data)

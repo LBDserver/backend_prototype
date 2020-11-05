@@ -5,8 +5,6 @@ const {
     deleteRepository
 } = require('./repository-management-controller')
 
-const {login} = require('./stateless-login-controller')
-
 const {
     getUser,
     getUsers,
@@ -20,7 +18,6 @@ module.exports = {
     getRepositories,
     getRepository,
     deleteRepository,
-    login,
     getUser,
     getUsers,
     deleteUser,
