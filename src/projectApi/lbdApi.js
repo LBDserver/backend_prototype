@@ -110,7 +110,7 @@ getOneProject = async (req, res) => {
             files.forEach(file => {
                 documentUrls.push(file.url)
             })
-    
+     
             let namedUris = []
             allNamed.results.bindings.forEach(result => {
                 if (!result.contextID.value.endsWith('acl') && !result.contextID.value.endsWith('meta')) {

@@ -1,6 +1,7 @@
 const { model } = require('mongoose')
 const { User, Project, File } = require("../../projectApi/documentApi/mongodb/models")
 const graphStore = require('../../projectApi/graphApi/graphdb')
+const { translate, toSparql } = require('sparqlalgebrajs');
 const _ = require('lodash')
 
 basicPermissions = (req) => {
@@ -16,7 +17,7 @@ basicPermissions = (req) => {
             const requestedPermissions = requestPermissions(req.method, url, type)
 
             let allowed, permissions
-
+            console.log('req.query.query', req.query.query) 
            
             if (req.query.query && type === "PROJECT") {
                 let allowedGraphs = []
@@ -31,7 +32,7 @@ basicPermissions = (req) => {
                     }
 
                     const acl = await findAclSparql(graph, metaGraph, projectName)
-                    permissions = await queryPermissions(req.user.url, acl, projectName)
+                    permissions = await queryPermissions(req.user, acl, projectName)
 
                     allowed = requestedPermissions.some(r => permissions.has(r))
 
@@ -56,7 +57,6 @@ basicPermissions = (req) => {
                 // default case (also when resource is ACL file (ends with .acl))
             } else {
                 const acl = await getAcl(req, url, type)
-                console.log('acl', acl)
                 permissions = await queryPermissions(req.user, acl, projectName)
 
                                 // see if all requested permissions are present in the actual permitted operations
@@ -124,13 +124,13 @@ requestPermissions = (method, url, type) => {
 adaptQuery = (query, graphs) => {
     return new Promise((resolve, reject) => {
         try {
-            console.log('query', query)
-            console.log('graph', graphs)
+            const algebra = translate(query)
+            console.log('algebra', algebra)
+
             let splitQuery = query.split('where')
             if (splitQuery.length <= 1) {
                 splitQuery = query.split('WHERE')
             }
-            console.log('splitQuery', splitQuery)
             graphs.forEach(graph => {
                 splitQuery[0] = splitQuery[0] + `FROM <${graph}> `
             })
@@ -223,7 +223,6 @@ getAcl = (req, url, type) => {
                         metaGraph = subject + '.meta'
                     } else {
                         subject = url
-                        console.log('url', url)
                         metaGraph = `${url}.meta`
                     }
                     break;
@@ -284,9 +283,7 @@ queryPermissions = (user, acl, project) => {
             agentClassQuery = agentClassQuery.replace(/\n/g, "")
 
             const agentClassResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
-            console.log('agentClassResults', agentClassResults)
             for await (item of agentClassResults.results.bindings) {
-                console.log('Agent')
                 if (item.agent.value === "http://xmlns.com/foaf/0.1/Agent") {
                     allowedModes.add(item.permission.value)
                 }
@@ -352,7 +349,6 @@ findAclSparql = (subject, meta, project) => {
                 meta = subject
             }
 
-            console.log('meta', meta)
             let aclQuery = `
 PREFIX lbd: <https://lbdserver.org/vocabulary#>
  SELECT ?acl ?s
@@ -364,7 +360,6 @@ PREFIX lbd: <https://lbdserver.org/vocabulary#>
             let acl
             if (!subject.endsWith('.acl')) {
                 aclQuery = aclQuery.replace(/\n/g, " ")
-                console.log('aclQuery', aclQuery)
                 const aclResults = await graphStore.queryRepository(project, encodeURIComponent(aclQuery))
                 acl = aclResults.results.bindings[0].acl.value
 

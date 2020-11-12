@@ -31,7 +31,6 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
 getNamedGraph = (namedGraph, repositoryId, token, format) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log('getting')
             const mimeTypes = {
                 "turtle": "text/turtle"
             }
@@ -47,7 +46,6 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
                 }
             };
 
-            console.log('options', options)
             const response = await axios(options)
             resolve(response.data)
         } catch (error) {

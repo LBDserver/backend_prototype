@@ -17,7 +17,6 @@ queryRepository = (id, query) => {
                     'Authorization': process.env.GDB_ADMIN
                 }
             };
-            console.log('options', options)
             const results = await axios(options)
             resolve(results.data)
         } catch (error) {
