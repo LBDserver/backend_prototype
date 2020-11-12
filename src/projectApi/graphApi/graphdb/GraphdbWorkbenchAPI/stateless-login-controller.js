@@ -12,7 +12,7 @@ login = async (username, password) => {
             'url': `${process.env.GRAPHDB_URL}/rest/login/${username}`,
             'headers': {
                 'Accept': 'application/json',
-                'X-GraphDB-Password': password
+                'Authorization': process.env.GDB_ADMIN
             }
         };
         const repositories = await axios(options)

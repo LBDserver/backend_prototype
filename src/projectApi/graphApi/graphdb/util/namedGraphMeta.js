@@ -1,6 +1,6 @@
 const { v4 } = require('uuid');
 
-namedGraphMeta = (namedGraph, acl, title, id, description) => {
+namedGraphMeta = (namedGraph, acl, label, description) => {
     const ownerBlankNode = v4()
     let data =  `@prefix acl: <http://www.w3.org/ns/auth/acl#>. 
     @prefix lbd: <https://lbdserver.org/vocabulary#>. 
@@ -10,8 +10,7 @@ namedGraphMeta = (namedGraph, acl, title, id, description) => {
     @prefix : <./>. 
     <${namedGraph}> lbd:hasAcl <${acl}>;
         rdfs:comment "${description}";
-        dcterms:title "${title}";
-        rdfs:label "${id}".
+        rdfs:label "${label}".
     `
 
     data = data.replace(/\n/g, "")

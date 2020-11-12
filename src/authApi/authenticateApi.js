@@ -17,7 +17,14 @@ authenticate = async (req, res, next) => {
         next()
 
     } catch (error) {
-        res.status(401).send({ error: 'Please authenticate' })
+        try {
+            console.log('no authentication: user is foaf:Agent')
+
+            req.user = {username: "visitor", guest: true}
+            next() 
+        } catch (error) {
+            res.status(401).send({ error: 'Please authenticate' })
+        }
     }
 }
 

@@ -198,8 +198,7 @@ getAcl = (req, url, type) => {
 
             let metaGraph, subject
             const projectName = req.params.projectName
-            const graphId = req.params.graphId
-            const graph = process.env.DOMAIN_URL + '/lbd/' + projectName + '/graphs/' + graphId
+
 
 
             switch (type) {
@@ -208,6 +207,8 @@ getAcl = (req, url, type) => {
                     metaGraph = `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`
                     break;
                 case 'GRAPH':
+                    const graphId = req.params.graphId
+                    const graph = process.env.DOMAIN_URL + '/lbd/' + projectName + '/graphs/' + graphId
                     if (req.method == 'POST') {
                         subject = `${process.env.DOMAIN_URL}/lbd/${projectName}`
                         metaGraph = subject + '.meta'
@@ -222,6 +223,7 @@ getAcl = (req, url, type) => {
                         metaGraph = subject + '.meta'
                     } else {
                         subject = url
+                        console.log('url', url)
                         metaGraph = `${url}.meta`
                     }
                     break;
@@ -241,7 +243,6 @@ getAcl = (req, url, type) => {
 queryPermissions = (user, acl, project) => {
     return new Promise(async (resolve, reject) => {
         try {
-
             // 1. query for agents or their e-mail
             let agentQuery = `
             PREFIX lbd: <https://lbdserver.org/vocabulary#>
@@ -267,8 +268,29 @@ queryPermissions = (user, acl, project) => {
                 }
             }
 
-            // 2. query for agentClasses
+            // 2. query for agentClasses (e.g. every agent)
+            let agentClassQuery = `
+            PREFIX lbd: <https://lbdserver.org/vocabulary#>
+            PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+            
+            SELECT ?permission ?agent ?email
+            FROM <${acl}>
+            WHERE 
+                {?rule acl:mode ?permission;
+                    acl:agentClass ?agent
+            }
+            `
+            agentClassQuery = agentClassQuery.replace(/\n/g, "")
 
+            const agentClassResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
+            console.log('agentClassResults', agentClassResults)
+            for await (item of agentClassResults.results.bindings) {
+                console.log('Agent')
+                if (item.agent.value === "http://xmlns.com/foaf/0.1/Agent") {
+                    allowedModes.add(item.permission.value)
+                }
+            }
 
             // 3. query for agentGroups
 
@@ -292,7 +314,6 @@ queryPermissions = (user, acl, project) => {
             //         }
             //     }
             // }
-
             resolve(allowedModes)
         } catch (error) {
             reject(error)

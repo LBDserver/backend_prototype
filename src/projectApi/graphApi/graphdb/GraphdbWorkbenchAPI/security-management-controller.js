@@ -10,7 +10,8 @@ getUsers = async (username, token) => {
             'method': 'GET',
             'url': `${process.env.GRAPHDB_URL}/rest/security/user`,
             'headers': {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': process.env.GDB_ADMIN
             }
         };
         const users = await axios(options)
@@ -27,7 +28,8 @@ getUser = async (username, token) => {
             'method': 'GET',
             'url': `${process.env.GRAPHDB_URL}}/rest/security/user/${username}`,
             'headers': {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': process.env.GDB_ADMIN
             }
         };
         const user = await axios(options)
@@ -46,8 +48,7 @@ createUser = async (username, password, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
-                'X-GraphDB-Password': password,
-                'Authorization': token
+                'Authorization': process.env.GDB_ADMIN
             },
             body: JSON.stringify({username})
         };
@@ -70,7 +71,7 @@ deleteUser = async (username, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Accept': 'application/json',
-                'Authorization': token
+                'Authorization': process.env.GDB_ADMIN
             }
         };
         const user = await axios(options)
@@ -89,7 +90,7 @@ updateUser = async (username, password, body, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
-                'X-GraphDB-Password': password,
+                'Authorization': process.env.GDB_ADMIN
             },
             body: JSON.stringify(body)
         };

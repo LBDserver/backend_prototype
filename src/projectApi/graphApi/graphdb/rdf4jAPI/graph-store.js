@@ -61,6 +61,7 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
     return new Promise(async (resolve, reject) => {
         try {
             const formData = new FormData()
+            console.log('clearing Graph ', namedGraph)
             formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
             const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
             const headers = {

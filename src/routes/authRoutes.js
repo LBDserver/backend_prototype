@@ -30,7 +30,7 @@ router.get('/:userName', authenticate, getUser) // get user account data. (cf. s
 router.post('/:userName', authenticate, updateProfile) // update your user profile
 router.put('/:userName', authenticate, updateProfile) // idem
 router.patch('/:userName', authenticate, updateProfile) // idem
-router.delete('/:userName', authenticate, deleteProfile) // delete your profile. Your project is deleted when all collaborators have dismissed this project.
+router.delete('/:userName', authenticate, deleteProfile) // delete your profile 
 
 // requires admin privileges
 router.get('/users', authenticateAdmin, getUsers) // get all users

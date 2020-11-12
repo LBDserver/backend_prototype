@@ -27,7 +27,7 @@ createProject = async (req, res) => {
         // const repoUrl = `${process.env.GRAPHDB_URL}/rest/repositories/${fullTitle}`
 
         const acl = process.env.DOMAIN_URL + '/lbd/' + id + '/.acl'
-        const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, creator, title, id, description)
+        const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, title, id, description)
 
         // create project repository graphdb
         await graphStore.createRepository(title, id)
@@ -135,7 +135,7 @@ deleteProject = async (req, res) => {
         await graphStore.deleteRepository(projectName)
         // delete from list in document store (user)
         let newProjectList = owner.projects.filter(project => {
-            return project.Graph_url !== `${process.env.SERVER_URL}/lbd/${projectName}`
+            return project.id !== projectName
         })
         owner.projects = newProjectList
         await owner.save()
@@ -208,11 +208,16 @@ getDocumentFromProject = async (req, res) => {
         // only access docdb
         const projectName = req.params.projectName
         const fileId = req.params.fileId
-        const owner = req.user.url
-        console.log('fileId', fileId)
-        const file = await docStore.getDocument(projectName, fileId)
+        const url = `${process.env.DOMAIN_URL}${req.originalUrl}`
+        if (!url.endsWith('.meta')) {
+            const file = await docStore.getDocument(projectName, fileId)
+    
+            return res.status(200).send(file.main)
+        } else {
+            const results = await getFileMeta(req, res)
+            return res.status(200).json(results)
+        }
 
-        return res.status(200).json({ file })
     } catch (error) {
         const { reason, status } = errorHandler(error)
         return res.status(status).send({ error: reason })
@@ -265,6 +270,38 @@ createNamedGraph = async (req, res) => {
     }
 }
 
+getFileMeta = async(req, res) => {
+    try {
+        const projectName = req.params.projectName
+        const fileId = req.params.fileId
+
+        const namedGraph = process.env.DOMAIN_URL + '/lbd/' + projectName + '/files/' + fileId
+
+        if (req.query.query) {
+            console.log('req.query.query', req.query.query)
+            const newQuery = await adaptQuery(req.query.query, [namedGraph])
+            console.log('newQuery', newQuery)
+            const results = await graphStore.queryRepository(projectName, newQuery)
+
+            return {query: newQuery, results}
+        } else {
+            console.log('namedGraph', namedGraph)
+            const graph = await graphStore.getNamedGraph(namedGraph, projectName, '', 'turtle')
+            console.log('graph', graph)
+            if (!graph.length > 0) {
+                throw { reason: "Graph not found", status: 404 }
+            }
+            return { graph }
+        }
+    } catch (error) {
+        if (error.reason) {
+            return res.status(error.status).send({ error: error.reason })
+        } else {
+            return res.status(500).send({ error: error.message })
+        }
+    }
+}
+ 
 getNamedGraph = async (req, res) => {
     try {
         const projectName = req.params.projectName
@@ -301,10 +338,10 @@ deleteNamedGraph = async (req, res) => {
         const projectName = req.params.projectName
         const graphId = req.params.graphId
 
-        const namedGraph = process.env.DOMAIN_URL + '/lbd' + projectName + '/graphs/' + graphId
-        const namedMetaGraph = process.env.DOMAIN_URL + '/lbd' + projectName + '/graphs/' + graphId + '.meta'
-
+        const namedGraph = process.env.DOMAIN_URL + '/lbd/' + projectName + '/graphs/' + graphId
+        const namedGraphMeta = process.env.DOMAIN_URL + '/lbd/' + projectName + '/graphs/' + graphId + '.meta'
         await graphStore.deleteNamedGraph(namedGraph, projectName, '')
+
         await graphStore.deleteNamedGraph(namedGraphMeta, projectName, '')
 
         return res.status(200).json({ message: 'The named graph was successfully deleted' })

@@ -23,7 +23,7 @@ login = async (req, res) => {
         res.send({ user, token })
     } catch (error) {
         console.log('error', error)
-        res.status(400).send({ error })
+        res.status(400).send({ error: error.toString() })
     }
 }
 

@@ -16,7 +16,8 @@ getRepositories = () => {
                 'method': 'GET',
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories`,
                 'headers': {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
             const response = await axios(options)
@@ -39,7 +40,8 @@ getRepository = (id) => {
                 'method': 'GET',
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
                 'headers': {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
             const response = await axios(options)
@@ -63,7 +65,10 @@ createRepository = (title, id) => {
 
             formData.append('config', repoconfig, 'config')
             const url = `${process.env.GRAPHDB_URL}/rest/repositories`
-            const headers = { 'Content-Type': `multipart/form-data; boundary=${formData._boundary}` }
+            const headers = { 
+                'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
+                'Authorization': process.env.GDB_ADMIN
+             }
 
 
             const response = await axios.post(url, formData, {headers})
@@ -87,7 +92,8 @@ deleteRepository = (id) => {
                 'method': 'DELETE',
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
                 'headers': {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Authorization': process.env.GDB_ADMIN
                 }
             };
             const response = await axios(options)
