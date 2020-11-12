@@ -1,5 +1,0 @@
-- vraag is of de dichotomie tss nonRDF en RDF op API niveau moet gebeuren of onderhuids. Momenteel hier op API niveau, LDP platformen zoals Solid doen dit onderhuids.
-voordelen van de tweede approach is dat acl checks veel sneller verlopen (niet nodig om Type etc te bepalen)
-
-- endpoints = uris? niet noodzakelijk. Server kan een 'shield' zijn vanwaar het project bereikbaar is.
-
