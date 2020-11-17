@@ -146,6 +146,7 @@ getOneProject = async (req, res) => {
         graphs: namedUris,
         documents: documentUrls,
         id: projectName,
+        permissions: Array.from(req.permissions)
       });
     }
   } catch (error) {
@@ -259,7 +260,7 @@ getDocumentFromProject = async (req, res) => {
       return res.status(200).send(file.main);
     } else {
       const results = await getFileMeta(req, res);
-      return res.status(200).json(results);
+      return res.status(200).json({...results, permissions: Array.from(req.permissions)});
     }
   } catch (error) {
     const { reason, status } = errorHandler(error);
@@ -370,7 +371,7 @@ getNamedGraph = async (req, res) => {
 
     if (req.query.onlyPermissions) {
       return res.status(200).send({ permissions: Array.from(req.permissions) });
-      
+
     } else if (req.query.query) {
       console.log("req.query.query", req.query.query);
       const newQuery = await adaptQuery(req.query.query, [namedGraph]);
@@ -388,7 +389,7 @@ getNamedGraph = async (req, res) => {
       if (!graph.length > 0) {
         throw { reason: "Graph not found", status: 404 };
       }
-      return res.json({ graph });
+      return res.json({ graph, permissions: Array.from(req.permissions) });
     }
   } catch (error) {
     if (error.reason) {
