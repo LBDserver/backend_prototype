@@ -237,9 +237,9 @@ uploadDocumentToProject = async (req, res) => {
       label = req.body.label;
     }
 
-    await setMetaGraph(projectName, documentUrl, acl, label, description);
+    const metaContext = await setMetaGraph(projectName, documentUrl, acl, label, description);
 
-    return res.status(201).json({ url: documentUrl });
+    return res.status(201).json({ url: documentUrl, metaGraph: metaContext });
   } catch (error) {
     const { reason, status } = errorHandler(error);
     return res.status(status).send({ error: reason });
@@ -316,6 +316,8 @@ createNamedGraph = async (req, res) => {
 
     return res.status(201).json({
       message: `Successfully created the named graph with context ${context}`,
+      metaGraph: metaContext,
+      url: context
     });
   } catch (error) {
     const { reason, status } = errorHandler(error);
@@ -538,7 +540,7 @@ setMetaGraph = (projectName, uri, acl, label, description) => {
 
       await graphStore.createNamedGraph(projectName, graphMeta, "");
       console.log("created metadata graph with context", graphMeta.context);
-      resolve(graphMeta.context);
+      resolve(graphMetaData);
     } catch (error) {
       reject(error);
     }

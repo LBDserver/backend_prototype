@@ -5,6 +5,7 @@ const {
     register,
     login,
     logout,
+    logoutAll,
     deleteProfile,
     getUser,
     getUsers,
@@ -23,7 +24,7 @@ router.get('/', (req, res) => {
 // auth routes
 router.post('/register', register) // create an account on this LBD server
 router.post('/login', login) // login on the LBD server (JWT)
-router.post('/logout', authenticate, logout) // logout
+router.post('/logout', authenticate, logoutAll) // logout
 
 // change to webID-based routes
 router.get('/:userName', authenticate, getUser) // get user account data. (cf. solid webid)

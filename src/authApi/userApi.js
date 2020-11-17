@@ -44,12 +44,12 @@ logout = async (req, res) => {
         req.user.tokens = req.user.tokens.filter((token) => {
             return token.token !== req.token
         })
-
+        console.log('user logged out')
         await req.user.save()
-        res.send()
+        res.status(200).send({message: "successfully logged out"})
 
     } catch (error) {
-        res.staus(500).send()
+        res.status(500).send()
     }
 }
 
@@ -57,9 +57,10 @@ logoutAll = async (req, res) => {
     try {
         req.user.tokens = []
         await req.user.save()
-        res.send()
+        console.log('user logged out everywhere')
+        res.status(200).send({message: "successfully logged out!"})
     } catch (error) {
-        res.staus(500).send()
+        res.status(500).send()
     }
 }
 
