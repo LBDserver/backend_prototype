@@ -8,7 +8,7 @@ basicPermissions = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             const projectName = req.params.projectName
-            const url = `${process.env.DOMAIN_URL}${req.originalUrl}`
+            const url = `${process.env.DOMAIN_URL}${req.baseUrl}${req.path}`
 
             // determines the type of the request => project, graph, file, query
             const type = getType(url, req)
@@ -49,7 +49,7 @@ basicPermissions = (req) => {
 
                 if (!queryNotChanged) {
                     const newQuery = await adaptQuery(sparql, allowedGraphs)
-                    resolve({allowed, query: newQuery})
+                    resolve({allowed, query: newQuery, permissions: ['http://www.w3.org/ns/auth/acl#Read']})
                 } else {
                     resolve({allowed})
                 }
@@ -64,7 +64,7 @@ basicPermissions = (req) => {
             }
 
             if (allowed) {
-                resolve({allowed})
+                resolve({allowed, permissions})
             } else {
                 reject({ reason: "Operation not permitted: unauthorized", status: "401" })
             }
@@ -198,7 +198,7 @@ getAcl = (req, url, type) => {
 
             let metaGraph, subject
             const projectName = req.params.projectName
-
+            console.log('projectName', projectName)
 
 
             switch (type) {
@@ -348,6 +348,7 @@ findAclSparql = (subject, meta, project) => {
             if (subject.endsWith('meta')) {
                 meta = subject
             }
+            console.log('meta', meta)
 
             let aclQuery = `
 PREFIX lbd: <https://lbdserver.org/vocabulary#>

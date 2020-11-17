@@ -52,14 +52,16 @@ authenticateAdmin = async (req, res, next) => {
 checkAccess = async (req, res, next) => {
   console.log("checking access");
   try {
-    const { allowed, query } = await basicPermissions(req);
+    const { allowed, query, permissions } = await basicPermissions(req);
+
     if (req.query.query && query) {
       console.log("req.query.query", req.query.query);
       console.log("query", query);
       req.query.query = query;
     }
-    req.permissions = allowed;
-    console.log("allowed", allowed);
+
+    req.permissions = permissions;
+    console.log("method allowed", allowed);
     next();
   } catch (error) {
     console.log("error", error);

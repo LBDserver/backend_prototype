@@ -25,9 +25,9 @@ const {
 const { authenticate, checkAccess } = require('../authApi')
 
 const upload = multer({
-    limits: {
-        fileSize: 10000000
-    }
+    // limits: {
+    //     fileSize: 10000000
+    // }
 })
 
 router.get('/', authenticate, getAllProjects) // get a list of all projects owned by the current user (future: also projects to which the user is associated)
