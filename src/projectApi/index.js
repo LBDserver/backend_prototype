@@ -9,7 +9,8 @@ const {
     deleteDocumentFromProject,
     getNamedGraph,
     deleteNamedGraph,
-    createNamedGraph
+    createNamedGraph,
+    updateNamedGraph
 } = require('./lbdApi')
 
 module.exports = {
@@ -17,6 +18,7 @@ module.exports = {
     createProject,
     getOneProject,
     deleteProject,
+    updateNamedGraph,
     queryProject,
     uploadDocumentToProject,
     getDocumentFromProject,

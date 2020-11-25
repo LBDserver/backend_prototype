@@ -212,6 +212,19 @@ queryProject = async (req) => {
   });
 };
 
+updateNamedGraph = async (req, res) => {
+    try {
+      console.log('req.query.update', req.query.update)
+      const update = encodeURIComponent(req.query.update)
+      const projectName = req.params.projectName
+      await graphStore.updateRepositorySparql(projectName, update)
+      return res.status(204).send()
+
+    } catch (error) {
+      return res.status(400).send({message: error});
+    }
+};
+
 //////////////////////////// document API ///////////////////////////////
 uploadDocumentToProject = async (req, res) => {
   try {
@@ -260,7 +273,7 @@ getDocumentFromProject = async (req, res) => {
       return res.status(200).send(file.main);
     } else {
       const results = await getFileMeta(req, res);
-      return res.status(200).json({...results, permissions: Array.from(req.permissions)});
+      return res.status(200).json({ ...results, permissions: Array.from(req.permissions) });
     }
   } catch (error) {
     const { reason, status } = errorHandler(error);
@@ -505,9 +518,22 @@ setGraph = (req, projectName, acl, context) => {
       const graphData = {
         context,
         baseURI: context + "#",
-        data: req.files.graph[0].buffer.toString(),
         acl,
       };
+
+      // an existing graph is sent along
+      if (req.files.graph) {
+        graphData.data = req.files.graph[0].buffer.toString()
+      } else { // a blank graph is to be created
+        graphData.data = `
+@prefix : <${context}#>.
+@prefix sp: <http://spinrdf.org/sp#>.
+@prefix bot: <https://w3id.org/bot#>.
+@prefix stg: <https://raw.githubusercontent.com/JWerbrouck/Thesis/master/stg.ttl#>.
+
+: a sp:NamedGraph .
+        `
+      }
 
       await graphStore.createNamedGraph(projectName, graphData, "");
       console.log("created graph with context", graphData.context);
@@ -558,6 +584,7 @@ module.exports = {
   uploadDocumentToProject,
   deleteDocumentFromProject,
 
+  updateNamedGraph,
   getNamedGraph,
   createNamedGraph,
   deleteNamedGraph,

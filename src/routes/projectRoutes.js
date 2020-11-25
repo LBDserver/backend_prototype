@@ -40,6 +40,7 @@ router.get('/:projectName/query', authenticate, checkAccess, queryProject) // on
 router.delete('/:projectName', authenticate, checkAccess, deleteProject) // delete a project
 
 router.get('/:projectName/graphs/:graphId', authenticate, checkAccess, getNamedGraph) // get single named graphs, as TTL
+router.post('/:projectName/graphs/:graphId', authenticate, checkAccess, updateNamedGraph) // update named graph
 router.post('/:projectName/graphs', authenticate, checkAccess, upload.fields([{name: 'graph'}, {name: 'acl'}]), createNamedGraph) // create a named graph by sending a TTL file
 
 // router.put('/:projectName/graphs', authenticate, replaceNamedGraph) // named graph will be replaced. In-graph updates should happen via sparql. => use delete and upload NG
