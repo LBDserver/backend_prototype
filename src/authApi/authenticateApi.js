@@ -53,7 +53,7 @@ checkAccess = async (req, res, next) => {
   console.log("checking access");
   try {
     const { allowed, query, permissions } = await basicPermissions(req);
-
+    console.log('permissions', permissions)
     if (req.query.query && query) {
       console.log("req.query.query", req.query.query);
       console.log("query", query);

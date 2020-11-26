@@ -15,7 +15,7 @@ basicPermissions = (req) => {
 
             // determines the permissions that are asked by the agent
             const requestedPermissions = requestPermissions(req.method, url, type)
-
+            console.log('requestedPermissions', requestedPermissions)
             let allowed, permissions
             console.log('req.query.query', req.query.query) 
            
@@ -51,14 +51,15 @@ basicPermissions = (req) => {
                     const newQuery = await adaptQuery(sparql, allowedGraphs)
                     resolve({allowed, query: newQuery, permissions: ['http://www.w3.org/ns/auth/acl#Read']})
                 } else {
-                    resolve({allowed})
+                    resolve({allowed, permissions})
                 }
 
                 // default case (also when resource is ACL file (ends with .acl))
             } else {
                 const acl = await getAcl(req, url, type)
                 permissions = await queryPermissions(req.user, acl, projectName)
-
+                console.log('permissions', permissions)
+                console.log('requestedPermissions', requestedPermissions)
                                 // see if all requested permissions are present in the actual permitted operations
                 allowed = requestedPermissions.some(r => permissions.has(r))
             }
@@ -93,7 +94,8 @@ getType = (fullUrl, req) => {
 
 requestPermissions = (method, url, type) => {
     let permissions = []
-    if (url.endsWith('.acl') || url.endsWith('.meta')) {
+    console.log('url', url)
+    if (url.endsWith('.acl')) {
         permissions.push('http://www.w3.org/ns/auth/acl#Control')
     } else {
         switch (method) {
@@ -262,7 +264,7 @@ queryPermissions = (user, acl, project) => {
 
             const agentResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
             for await (item of agentResults.results.bindings) {
-                if (item.agent.value === user.url || item.agent.email === user.email) {
+                if (item.agent.value === user.url || item.agent.email === user.email && user.email !== undefined) {
                     allowedModes.add(item.permission.value)
                 }
             }
@@ -282,8 +284,9 @@ queryPermissions = (user, acl, project) => {
             `
             agentClassQuery = agentClassQuery.replace(/\n/g, "")
 
-            const agentClassResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
+            const agentClassResults = await graphStore.queryRepository(project, encodeURIComponent(agentClassQuery))
             for await (item of agentClassResults.results.bindings) {
+                console.log('agentClassResults', item)
                 if (item.agent.value === "http://xmlns.com/foaf/0.1/Agent") {
                     allowedModes.add(item.permission.value)
                 }

@@ -13,7 +13,7 @@ const { adaptQuery } = require("../authApi/authorisation/basicPermissions");
 createProject = async (req, res) => {
   try {
     const creator = req.user;
-    const { title, description } = req.body;
+    const { title, description, public } = req.body;
 
     if (!title) {
       throw { reason: "Please provide a title for the project", status: 400 };
@@ -46,7 +46,7 @@ createProject = async (req, res) => {
     creator.projects.push({ url: repoUrl, id, title });
     await creator.save();
 
-    await createDefaultAclGraph(id, creator, acl);
+    await createDefaultAclGraph(id, creator, acl, public);
 
     return res.status(201).json({
       projectGraph: repoMetaData,
@@ -62,14 +62,15 @@ createProject = async (req, res) => {
 };
 
 // helper function to upload the default acls at project initialisation. For now, these are the public and private graphs.
-createDefaultAclGraph = (id, creator, aclUrl) => {
+createDefaultAclGraph = (id, creator, aclUrl, public) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const data = `
+      let data = `
 # Root ACL resource for LBDserver project with id ${id}
 @prefix acl: <http://www.w3.org/ns/auth/acl#>.
 @prefix lbd: <https://lbdserver.org/vocabulary#>.
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
 
 # The owner has all permissions
 <#owner>
@@ -78,7 +79,16 @@ createDefaultAclGraph = (id, creator, aclUrl) => {
     acl:mode acl:Read, acl:Write, acl:Control.
 
 <${creator.url}> vcard:email "${creator.email}".
+
 `;
+
+if (public) {
+  data = data + `
+  <#visitor>
+    a acl:Authorization;
+    acl:agentClass foaf:Agent;
+    acl:mode acl:Read.`
+}
       const aclData = {
         context: aclUrl,
         baseURI: aclUrl + "#",
@@ -150,7 +160,7 @@ getOneProject = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(status).send({ error: error.toJSON() });
+    return res.status(400).send({ error });
   }
 };
 
@@ -218,9 +228,10 @@ updateNamedGraph = async (req, res) => {
       const update = encodeURIComponent(req.query.update)
       const projectName = req.params.projectName
       await graphStore.updateRepositorySparql(projectName, update)
-      return res.status(204).send()
+      return res.status(204).send({message: "successfully updated the named graph"})
 
     } catch (error) {
+      console.log('error', error)
       return res.status(400).send({message: error});
     }
 };
@@ -500,7 +511,7 @@ setAcl = (req, context) => {
           throw {
             reason:
               "The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files",
-            status: 400,
+            status: 400, 
           };
         }
       }
