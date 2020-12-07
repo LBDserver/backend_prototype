@@ -2,6 +2,8 @@ const defaultBody = require('../util/createGraphBody')
 const axios = require('axios')
 const FormData = require('form-data')
 const errorHandlerAxios = require('../../../../util/errorHandlerAxios')
+const btoa = require('btoa-lite')
+
 
 createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
     return new Promise(async (resolve, reject) => {
@@ -13,7 +15,7 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
                 'url': `http://localhost:7200/rest/data/import/upload/${repositoryId}/text`,
                 'headers': {
                     'Content-Type': 'application/json',
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 },
                 data: body
             };
@@ -42,7 +44,7 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
                 'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs/service?graph=${namedGraph}\n`,
                 'headers': {
                     'Accept': `${mimeType}`,
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 }
             };
 
@@ -63,7 +65,7 @@ deleteNamedGraph = (namedGraph, repositoryId, token) => {
             formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
             const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
             const headers = {
-                'Authorization': process.env.GDB_ADMIN,
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`,
                 'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
             }
 
@@ -84,7 +86,7 @@ getAllNamedGraphs = (repositoryId, token) => {
                 'method': 'GET',
                 'url': `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs`,
                 'headers': {
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 }
             };
             const response = await axios(options)

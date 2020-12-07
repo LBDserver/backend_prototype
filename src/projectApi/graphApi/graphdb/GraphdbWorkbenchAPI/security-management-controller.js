@@ -3,6 +3,7 @@ const request = require('request');
 const FormData = require('form-data')
 var fs = require('fs');
 const axios = require('axios')
+const btoa = require('btoa-lite')
 
 getUsers = async (username, token) => {
     try {
@@ -11,7 +12,7 @@ getUsers = async (username, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user`,
             'headers': {
                 'Accept': 'application/json',
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
             }
         };
         const users = await axios(options)
@@ -29,7 +30,7 @@ getUser = async (username, token) => {
             'url': `${process.env.GRAPHDB_URL}}/rest/security/user/${username}`,
             'headers': {
                 'Accept': 'application/json',
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
             }
         };
         const user = await axios(options)
@@ -48,7 +49,7 @@ createUser = async (username, password, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
             },
             body: JSON.stringify({username})
         };
@@ -71,7 +72,7 @@ deleteUser = async (username, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Accept': 'application/json',
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
             }
         };
         const user = await axios(options)
@@ -90,7 +91,7 @@ updateUser = async (username, password, body, token) => {
             'url': `${process.env.GRAPHDB_URL}/rest/security/user/${username}`,
             'headers': {
                 'Content-Type': ['application/json', 'text/plain'],
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
             },
             body: JSON.stringify(body)
         };

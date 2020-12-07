@@ -2,7 +2,7 @@ const { repoConfig } = require('../util/repoConfig')
 const request = require('request');
 const FormData = require('form-data')
 var fs = require('fs');
-
+const btoa = require('btoa-lite')
 // create project repository docdb, get project_id
 //const documentData = await docStore.createProjectDoc({ ...req.body, owner})
 
@@ -17,7 +17,7 @@ getRepositories = () => {
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories`,
                 'headers': {
                     'Accept': 'application/json',
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 }
             };
             const response = await axios(options)
@@ -27,6 +27,7 @@ getRepositories = () => {
             if (error.response.data) {
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
+                console.log('error', error)
                 reject({ reason: "Internal server error", status: 500 })
             }
         }
@@ -41,7 +42,7 @@ getRepository = (id) => {
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
                 'headers': {
                     'Accept': 'application/json',
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 }
             };
             const response = await axios(options)
@@ -50,6 +51,7 @@ getRepository = (id) => {
             if (error.response.data) {
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
+                console.log('error', error)
                 reject({ reason: "Internal server error", status: 500 })
             }
         }
@@ -67,7 +69,7 @@ createRepository = (title, id) => {
             const url = `${process.env.GRAPHDB_URL}/rest/repositories`
             const headers = { 
                 'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-                'Authorization': process.env.GDB_ADMIN
+                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
              }
 
 
@@ -79,6 +81,7 @@ createRepository = (title, id) => {
                 console.log('error.response.data', error.response.data)
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
+                console.log('error', error)
                 reject({ reason: "Internal server error", status: 500 })
             }
         }
@@ -93,7 +96,7 @@ deleteRepository = (id) => {
                 'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
                 'headers': {
                     'Accept': 'application/json',
-                    'Authorization': process.env.GDB_ADMIN
+                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
                 }
             };
             const response = await axios(options)
@@ -102,6 +105,7 @@ deleteRepository = (id) => {
             if (error.response.data) {
                 reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
             } else {
+                console.log('error', error)
                 reject({ reason: "Internal server error", status: 500 })
             }
         }
