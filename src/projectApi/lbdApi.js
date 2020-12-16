@@ -51,7 +51,7 @@ createProject = async (req, res) => {
     await createDefaultAclGraph(id, creator, acl, public);
 
     return res.status(201).json({
-      projectGraph: repoMetaData,
+      metadata: repoMetaData,
       id,
       graphs: [],
       documents: [],
@@ -184,7 +184,7 @@ findProjectData = async (projectName) => {
     });
 
     return {
-      projectGraph,
+      metadata: projectGraph,
       graphs: namedUris,
       documents: documentUrls,
       id: projectName
