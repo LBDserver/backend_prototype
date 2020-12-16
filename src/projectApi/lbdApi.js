@@ -6,7 +6,7 @@ const util = require("util");
 const { File, Project } = require("./documentApi/mongodb/models");
 const errorHandler = require("../util/errorHandler");
 const { v4 } = require("uuid");
-const { adaptQuery } = require("../authApi/authorisation/basicPermissions");
+const { adaptQuery, queryPermissions } = require("../authApi/authorisation/basicPermissions");
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -43,8 +43,10 @@ createProject = async (req, res) => {
       baseURI: metaTitle,
       data: repoMetaData,
     });
-    creator.projects.push({ url: repoUrl, id, title });
+     const project = new Project({ url: repoUrl, _id: id })
+    creator.projects.push(id);
     await creator.save();
+    await project.save(),
 
     await createDefaultAclGraph(id, creator, acl, public);
 
@@ -113,6 +115,26 @@ getAllProjects = async (req, res) => {
   }
 };
 
+getPublicProjects = async (req, res) => {
+  try {
+    const publicProjects = []
+    const projects = await Project.find()
+    for (const project of projects) {
+      console.log('project', project)
+      const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
+      if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
+        const projectData = await findProjectData(project._id)
+        publicProjects.push(projectData)
+      }
+    }
+    
+    return res.status(200).send({projects: publicProjects})
+  } catch (error) {
+    const { reason, status } = errorHandler(error);
+    return res.status(status).send({error: reason})
+  }
+}
+
 // send back project metadata and named graphs.
 getOneProject = async (req, res) => {
   try {
@@ -123,46 +145,54 @@ getOneProject = async (req, res) => {
     } else if (req.query.onlyPermissions) {
       return res.status(200).send({ permissions: Array.from(req.permissions) });
     } else {
-      console.log("object");
       const projectName = req.params.projectName;
-      const owner = req.user;
-      const projectGraph = await graphStore.getNamedGraph(
-        `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
-        projectName,
-        "",
-        "turtle"
-      );
-      const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
-      const files = await File.find({
-        project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
-      });
-      let documentUrls = [];
-      files.forEach((file) => {
-        documentUrls.push(file.url);
-      });
 
-      let namedUris = [];
-      allNamed.results.bindings.forEach((result) => {
-        if (
-          !result.contextID.value.endsWith("acl") &&
-          !result.contextID.value.endsWith("meta")
-        ) {
-          namedUris.push(result.contextID.value);
-        }
-      });
-
-      return res.status(200).json({
-        projectGraph,
-        graphs: namedUris,
-        documents: documentUrls,
-        id: projectName,
-        permissions: Array.from(req.permissions)
-      });
+      const projectData = await findProjectData(projectName)
+      projectData.permissions = Array.from(req.permissions)
+      return res.status(200).json(projectData);
     }
   } catch (error) {
     return res.status(400).send({ error });
   }
 };
+
+findProjectData = async (projectName) => {
+  try {
+    const projectGraph = await graphStore.getNamedGraph(
+      `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
+      projectName,
+      "",
+      "turtle"
+    );
+    const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
+    const files = await File.find({
+      project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
+    });
+    let documentUrls = [];
+    files.forEach((file) => {
+      documentUrls.push(file.url);
+    });
+
+    let namedUris = [];
+    allNamed.results.bindings.forEach((result) => {
+      if (
+        !result.contextID.value.endsWith("acl") &&
+        !result.contextID.value.endsWith("meta")
+      ) {
+        namedUris.push(result.contextID.value);
+      }
+    });
+
+    return {
+      projectGraph,
+      graphs: namedUris,
+      documents: documentUrls,
+      id: projectName
+    };
+  } catch (error) {
+    return error
+  }
+}
 
 // erase a project from existence
 deleteProject = async (req, res) => {
@@ -174,11 +204,12 @@ deleteProject = async (req, res) => {
     await graphStore.deleteRepository(projectName);
     // delete from list in document store (user)
     let newProjectList = owner.projects.filter((project) => {
-      return project.id !== projectName;
+      return project._id !== projectName;
     });
     owner.projects = newProjectList;
     await owner.save();
-
+    const project = await Project.findByIdAndDelete(projectName)
+    
     return res
       .status(200)
       .json({ message: `Project ${projectName} was deleted.` });
@@ -599,4 +630,6 @@ module.exports = {
   getNamedGraph,
   createNamedGraph,
   deleteNamedGraph,
+
+  getPublicProjects
 };

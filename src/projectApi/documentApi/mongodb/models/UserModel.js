@@ -41,10 +41,6 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    guest: {
-        type: Boolean,
-        default: false
-    },
     tokens: [{
         token: {
             type: String,
@@ -52,15 +48,8 @@ const userSchema = new mongoose.Schema({
         }
     }],
     projects: [{
-        url: {
-            type: String
-        },
-        id: {
-            type: String
-        },
-        title: {
-            type: String
-        }
+        type: String,
+        ref: "Project"
     }]
 })
 

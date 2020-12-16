@@ -19,7 +19,8 @@ const {
     updateNamedGraph,
     createNamedGraph,
     replaceNamedGraph,
-    queryNamedGraph
+    queryNamedGraph,
+    getPublicProjects
 } = require('../projectApi')
 
 const { authenticate, checkAccess } = require('../authApi')
@@ -33,6 +34,9 @@ const upload = multer({
 router.get('/', authenticate, getAllProjects) // get a list of all projects owned by the current user (future: also projects to which the user is associated)
 router.post('/', authenticate, createProject) // create a project repository and metadata
 
+router.get('/public', getPublicProjects) // get project metadata
+
+router.get('/:projectName', authenticate, checkAccess, getOneProject) // get project metadata
 router.get('/:projectName', authenticate, checkAccess, getOneProject) // get project metadata
 router.get('/:projectName/query', authenticate, checkAccess, queryProject) // only SPARQL select queries. Named graphs can be indicated
 // router.post('/:projectName/query', authenticate, checkAccess, queryProject) // all SPARQL queries. Named graphs can be indicated

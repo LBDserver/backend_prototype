@@ -244,28 +244,31 @@ getAcl = (req, url, type) => {
 queryPermissions = (user, acl, project) => {
     return new Promise(async (resolve, reject) => {
         try {
-            // 1. query for agents or their e-mail
-            let agentQuery = `
-            PREFIX lbd: <https://lbdserver.org/vocabulary#>
-            PREFIX acl: <http://www.w3.org/ns/auth/acl#>
-            PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
-            
-            SELECT ?permission ?agent ?email
-            FROM <${acl}>
-            WHERE 
-                {?rule acl:mode ?permission;
-                    acl:agent ?agent .
-            
-                    ?agent vcard:email ?email
-            }
-            `
-            agentQuery = agentQuery.replace(/\n/g, "")
             let allowedModes = new Set()
 
-            const agentResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
-            for await (item of agentResults.results.bindings) {
-                if (item.agent.value === user.url || item.agent.email === user.email && user.email !== undefined) {
-                    allowedModes.add(item.permission.value)
+            // 1. query for agents or their e-mail
+            if (user) {
+                let agentQuery = `
+                PREFIX lbd: <https://lbdserver.org/vocabulary#>
+                PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+                PREFIX vcard: <http://www.w3.org/2006/vcard/ns#>
+                
+                SELECT ?permission ?agent ?email
+                FROM <${acl}>
+                WHERE 
+                    {?rule acl:mode ?permission;
+                        acl:agent ?agent .
+                
+                        ?agent vcard:email ?email
+                }
+                `
+                agentQuery = agentQuery.replace(/\n/g, "")
+    
+                const agentResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
+                for await (item of agentResults.results.bindings) {
+                    if (item.agent.value === user.url || item.agent.email === user.email && user.email !== undefined) {
+                        allowedModes.add(item.permission.value)
+                    }
                 }
             }
 
@@ -283,7 +286,7 @@ queryPermissions = (user, acl, project) => {
             }
             `
             agentClassQuery = agentClassQuery.replace(/\n/g, "")
-
+            console.log('agentClassQuery', agentClassQuery)
             const agentClassResults = await graphStore.queryRepository(project, encodeURIComponent(agentClassQuery))
             for await (item of agentClassResults.results.bindings) {
                 console.log('agentClassResults', item)
@@ -378,4 +381,4 @@ PREFIX lbd: <https://lbdserver.org/vocabulary#>
     })
 }
 
-module.exports = { basicPermissions, adaptQuery }
+module.exports = { basicPermissions, adaptQuery, queryPermissions }
