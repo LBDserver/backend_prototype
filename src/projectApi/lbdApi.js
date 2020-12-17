@@ -14,6 +14,7 @@ createProject = async (req, res) => {
   try {
     const creator = req.user;
     const { title, description, public } = req.body;
+    console.log('description', description)
 
     if (!title) {
       throw { reason: "Please provide a title for the project", status: 400 };
@@ -30,7 +31,6 @@ createProject = async (req, res) => {
       repoUrl,
       acl,
       title,
-      id,
       description
     );
 
@@ -168,25 +168,35 @@ findProjectData = async (projectName) => {
     const files = await File.find({
       project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
     });
-    let documentUrls = [];
-    files.forEach((file) => {
-      documentUrls.push(file.url);
-    });
+    let documents = {};
+    for (const file of files) {
+      documents[file.url] = await graphStore.getNamedGraph(
+        `${file.url}.meta`,
+        projectName,
+        "",
+        "turtle"
+      );
+    }
 
-    let namedUris = [];
-    allNamed.results.bindings.forEach((result) => {
+    let graphs = {};
+    for (const result of allNamed.results.bindings) {
       if (
         !result.contextID.value.endsWith("acl") &&
         !result.contextID.value.endsWith("meta")
       ) {
-        namedUris.push(result.contextID.value);
+        graphs[result.contextID.value]= await graphStore.getNamedGraph(
+          `${result.contextID.value}.meta`,
+          projectName,
+          "",
+          "turtle"
+        );;
       }
-    });
+    }
 
     return {
       metadata: projectGraph,
-      graphs: namedUris,
-      documents: documentUrls,
+      graphs,
+      documents,
       id: projectName
     };
   } catch (error) {
@@ -204,7 +214,7 @@ deleteProject = async (req, res) => {
     await graphStore.deleteRepository(projectName);
     // delete from list in document store (user)
     let newProjectList = owner.projects.filter((project) => {
-      return project._id !== projectName;
+      return project !== projectName;
     });
     owner.projects = newProjectList;
     await owner.save();
