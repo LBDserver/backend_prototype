@@ -1,25 +1,57 @@
-const { Project, File } = require('./models')
-const { checkPermissions } = require('../../../authApi')
-require('./mongoose')
-const { v4 } = require('uuid');
+const { Project, File } = require("./models");
+const { checkPermissions } = require("../../../authApi");
+const { v4 } = require("uuid");
 
+function createProjectDoc(url, _id) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const project = new Project({ url, _id });
+      await project.save();
+      resolve(project);
+    } catch (error) {
+      console.log("error", error);
+      reject(error);
+    }
+  });
+}
 
-// owned by current user
-// createProjectDoc = (body) => {
-//     return new Promise(async (resolve, reject) => {
-//         const project = new Project({
-//             ...body,
-//             url: `${process.env.SERVER_URL}/project/${encodeURIComponent(body.name)}`
-//         })
-//         try {
-//             await project.save()
-//             resolve(project)
-//         } catch (error) {
-//             console.log('error', error)
-//             reject(error)
-//         }
-//     })
-// }
+function deleteProjectDoc (id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await Project.findByIdAndDelete(id);
+        resolve();
+      } catch (error) {
+        console.log("error", error);
+        reject(error);
+      }
+    });
+  };
+
+function pushProjectToCreator(id, creator) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      creator.projects.push(id);
+      await creator.save();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function removeProjectFromUser(id, user) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let newProjectList = user.projects.filter((project) => {
+            return project !== id;
+          });
+          user.projects = newProjectList;
+          await user.save();
+          resolve()
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
 // ACL implemented
 // getProjectDoc = ({ projectId, user }) => {
@@ -61,63 +93,44 @@ const { v4 } = require('uuid');
 //     })
 // }
 
-// only owner-permitted
-// deleteProjectDoc = ({ projectId, user }) => {
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             console.log('_id, owner', _id, owner)
-//             let project = await Project.findOne({ _id: projectId, owner: user })
-//             console.log('project', project)
-//             if (!project) {
-//                 reject({ status: 404 })
-//             }
 
-//             project.remove()
-
-//             resolve({ project, status: 200 })
-//         } catch (error) {
-//             console.log('error', error)
-//             reject(error)
-//         }
-//     })
-// }
 
 // owned by current user
 uploadDocuments = (projectName, data, user) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`
-            const fileId = v4()
-            const file = new File({
-                main: data,
-                project: projectUrl,
-                id: fileId
-            })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`;
+      const fileId = v4();
+      const file = new File({
+        main: data,
+        project: projectUrl,
+        id: fileId,
+      });
 
-            file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file.id}`
-            await file.save()
-            resolve(file.url)
-        } catch (error) {
-            console.log('error', error)
-            reject({reason: `MongoDB error: ${error.message}`, status: 500})
-        }
-    })
-}
+      file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file.id}`;
+      await file.save();
+      resolve(file.url);
+    } catch (error) {
+      console.log("error", error);
+      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+    }
+  });
+};
 
 // only owner-permitted
 deleteDocument = (fileId) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            document = await File.findByIdAndDelete(fileId)
-            if (!document) {
-                throw new Error()
-            }
-            resolve(document.url)
-        } catch (error) {
-            reject({reason: `MongoDB error: ${error.message}`, status: 500})
-        }
-    })
-}
+  return new Promise(async (resolve, reject) => {
+    try {
+      document = await File.findByIdAndDelete(fileId);
+      if (!document) {
+        throw new Error();
+      }
+      resolve(document.url);
+    } catch (error) {
+      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+    }
+  });
+};
 
 // ACL implemented
 // updateProjectDoc = ({ projectId, body, user }) => {
@@ -146,22 +159,21 @@ deleteDocument = (fileId) => {
 
 // ACL implemented
 getDocument = async (projectName, fileId) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`
-            const file = await File.findOne({ _id: fileId, project: projectUrl })
+  return new Promise(async (resolve, reject) => {
+    try {
+      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`;
+      const file = await File.findOne({ _id: fileId, project: projectUrl });
 
-            if (!file) {
-                reject({ status: 404, message: 'File not found' })
-            }
+      if (!file) {
+        reject({ status: 404, message: "File not found" });
+      }
 
-            resolve(file)
-
-        } catch (error) {
-            reject({reason: `MongoDB error: ${error.message}`, status: 500})
-        }
-    })
-}
+      resolve(file);
+    } catch (error) {
+      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+    }
+  });
+};
 
 // only admin
 // migrateMongo = () => {
@@ -201,7 +213,11 @@ getDocument = async (projectName, fileId) => {
 // }
 
 module.exports = {
-    uploadDocuments,
-    deleteDocument,
-    getDocument,
-}
+  uploadDocuments,
+  deleteDocument,
+  getDocument,
+  deleteProjectDoc,
+  createProjectDoc,
+  pushProjectToCreator,
+  removeProjectFromUser
+};

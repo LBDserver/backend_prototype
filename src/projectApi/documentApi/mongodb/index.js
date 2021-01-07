@@ -2,10 +2,18 @@ const {
     uploadDocuments,
     deleteDocument,
     getDocument,
-} = require('./mongoApi')
+    deleteProjectDoc,
+    createProjectDoc,
+    pushProjectToCreator,
+    removeProjectFromUser
+  } = require('./mongoApi')
 
 module.exports = {
     uploadDocuments,
     deleteDocument,
     getDocument,
-}
+    deleteProjectDoc,
+    createProjectDoc,
+    pushProjectToCreator,
+    removeProjectFromUser
+  };
