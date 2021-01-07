@@ -1,120 +1,96 @@
-const { repoConfig } = require('../util/repoConfig')
-const request = require('request');
-const FormData = require('form-data')
-var fs = require('fs');
-const btoa = require('btoa-lite')
+const { repoConfig } = require("../util/repoConfig");
+const request = require("request");
+const FormData = require("form-data");
+var fs = require("fs");
+const btoa = require("btoa-lite");
 // create project repository docdb, get project_id
 //const documentData = await docStore.createProjectDoc({ ...req.body, owner})
 
 // create project repository graphdb
-const axios = require('axios')
+const axios = require("axios");
 
-getRepositories = () => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const options = {
-                'method': 'GET',
-                'url': `${process.env.GRAPHDB_URL}/rest/repositories`,
-                'headers': {
-                    'Accept': 'application/json',
-                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
-                }
-            };
-            const response = await axios(options)
-            resolve(response.data)
+async function getRepositories () {
+    try {
+      const options = {
+        method: "GET",
+        url: `${process.env.GRAPHDB_URL}/rest/repositories`,
+        headers: {
+          Accept: "application/json",
+          Authorization: `Basic ${btoa(
+            process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW
+          )}`,
+        },
+      };
+      const response = await axios(options);
+      return(response.data);
+    } catch (error) {
+        throw new Error(`Failed to get repositories; ${error.message}`)
+    }
+};
 
-        } catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                console.log('error', error)
-                reject({ reason: "Internal server error", status: 500 })
-            }
-        }
-    })
+async function getRepository (id)  {
+    try {
+      const options = {
+        method: "GET",
+        url: `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
+        headers: {
+          Accept: "application/json",
+          Authorization: `Basic ${btoa(
+            process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW
+          )}`,
+        },
+      };
+      const response = await axios(options);
+      return(response.data);
+    } catch (error) {
+        throw new Error(`Failed to get repository; ${error.message}`)
+    }
+};
+
+async function createRepository(title, id) {
+  try {
+    let repoconfig = repoConfig(title, id);
+
+    const formData = new FormData();
+
+    formData.append("config", repoconfig, "config");
+    const url = `${process.env.GRAPHDB_URL}/rest/repositories`;
+    const headers = {
+      "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
+      Authorization: `Basic ${btoa(
+        process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW
+      )}`,
+    };
+
+    const response = await axios.post(url, formData, { headers });
+    return(response.data);
+  } catch (error) {
+      throw new Error(`Failed creating repository; ${error.message}`)
+  }
 }
 
-getRepository = (id) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const options = {
-                'method': 'GET',
-                'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
-                'headers': {
-                    'Accept': 'application/json',
-                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
-                }
-            };
-            const response = await axios(options)
-            resolve(response.data)
-        }  catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                console.log('error', error)
-                reject({ reason: "Internal server error", status: 500 })
-            }
-        }
-    })
-}
-
-createRepository = (title, id) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let repoconfig = repoConfig(title, id)
-
-            const formData = new FormData()
-
-            formData.append('config', repoconfig, 'config')
-            const url = `${process.env.GRAPHDB_URL}/rest/repositories`
-            const headers = { 
-                'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
-             }
-
-
-            const response = await axios.post(url, formData, {headers})
-            resolve(response.data)
-
-        }  catch (error) {
-            if (error.response.data) {
-                console.log('error.response.data', error.response.data)
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                console.log('error', error)
-                reject({ reason: "Internal server error", status: 500 })
-            }
-        }
-    })
-}
-
-deleteRepository = (id) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const options = {
-                'method': 'DELETE',
-                'url': `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
-                'headers': {
-                    'Accept': 'application/json',
-                    'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`
-                }
-            };
-            const response = await axios(options)
-            resolve(response.data)
-        }  catch (error) {
-            if (error.response.data) {
-                reject({ reason: `Graph Database error: ${error.response.data}`, status: error.response.status })
-            } else {
-                console.log('error', error)
-                reject({ reason: "Internal server error", status: 500 })
-            }
-        }
-    })
-}
+async function deleteRepository(id) {
+    try {
+      const options = {
+        method: "DELETE",
+        url: `${process.env.GRAPHDB_URL}/rest/repositories/${id}`,
+        headers: {
+          Accept: "application/json",
+          Authorization: `Basic ${btoa(
+            process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW
+          )}`,
+        },
+      };
+      const response = await axios(options);
+      return(response.data);
+    } catch (error) {
+        throw new Error(`Failed deleting repository; ${error.message}`)
+    }
+};
 
 module.exports = {
-    getRepositories,
-    getRepository,
-    createRepository,
-    deleteRepository,
-}
+  getRepositories,
+  getRepository,
+  createRepository,
+  deleteRepository,
+};

@@ -2,67 +2,62 @@ const { Project, File } = require("./models");
 const { checkPermissions } = require("../../../authApi");
 const { v4 } = require("uuid");
 
-function createProjectDoc(url, _id) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const project = new Project({ url, _id });
-      await project.save();
-      resolve(project);
-    } catch (error) {
-      console.log("error", error);
-      reject(error);
-    }
-  });
+async function createProjectDoc(url, _id) {
+  try {
+    const project = new Project({ url, _id });
+    await project.save();
+    return project;
+  } catch (error) {
+    throw new Error(
+      `Unable to create project with id ${id} in the document store; ${error.message}`
+    );
+  }
 }
 
-function deleteProjectDoc (id) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        await Project.findByIdAndDelete(id);
-        resolve();
-      } catch (error) {
-        console.log("error", error);
-        reject(error);
-      }
-    });
-  };
-
-function pushProjectToCreator(id, creator) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      creator.projects.push(id);
-      await creator.save();
-    } catch (error) {
-      reject(error);
-    }
-  });
+async function deleteProjectDoc(id) {
+  try {
+    await Project.findByIdAndDelete(id);
+    return true;
+  } catch (error) {
+    throw new Error(`Unable to delete project with id ${id}; ${error.message}`);
+  }
 }
 
-function removeProjectFromUser(id, user) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        let newProjectList = user.projects.filter((project) => {
-            return project !== id;
-          });
-          user.projects = newProjectList;
-          await user.save();
-          resolve()
-      } catch (error) {
-        reject(error);
-      }
-    });
+async function pushProjectToCreator(id, creator) {
+  try {
+    creator.projects.push(id);
+    await creator.save();
+    return true
+  } catch (error) {
+    throw new Error(
+      `Unable to push project with id ${id} to creator ${creator.uri}; ${error.message}`
+    );
   }
+}
 
-  function findAllProjectDocuments() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const projects = await Project.find()
-        resolve(projects)
-      } catch (error) {
-        reject(error)
-      }
-    })
+async function removeProjectFromUser(id, user) {
+  try {
+    let newProjectList = user.projects.filter((project) => {
+      return project !== id;
+    });
+    user.projects = newProjectList;
+    await user.save();
+    return true;
+  } catch (error) {
+    throw new Error(
+      `Unable to remove project with id ${id} from user ${user.uri}; ${error.message}`
+    );
   }
+}
+
+async function findAllProjectDocuments() {
+    try {
+      const projects = await Project.find();
+      resolve(projects);
+    } catch (error) {
+      throw new Error(`Unable to find all project documents; ${error.message}`)
+    }
+}
 // ACL implemented
 // getProjectDoc = ({ projectId, user }) => {
 //     return new Promise(async (resolve, reject) => {
@@ -103,13 +98,9 @@ function removeProjectFromUser(id, user) {
 //     })
 // }
 
-
-
-// owned by current user
-uploadDocuments = (projectName, data, user) => {
-  return new Promise(async (resolve, reject) => {
+async function uploadDocuments (id, data) {
     try {
-      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`;
+      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
       const fileId = v4();
       const file = new File({
         main: data,
@@ -117,29 +108,24 @@ uploadDocuments = (projectName, data, user) => {
         id: fileId,
       });
 
-      file.url = `${process.env.DOMAIN_URL}/lbd/${projectName}/files/${file.id}`;
+      file.url = `${process.env.DOMAIN_URL}/lbd/${id}/files/${file.id}`;
       await file.save();
-      resolve(file.url);
+      return (file.url);
     } catch (error) {
-      console.log("error", error);
-      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+      throw new Error(`Unable to upload document; ${error.message}`)
     }
-  });
 };
 
-// only owner-permitted
-deleteDocument = (fileId) => {
-  return new Promise(async (resolve, reject) => {
+async function deleteDocument(id) {
     try {
-      document = await File.findByIdAndDelete(fileId);
+      document = await File.findByIdAndDelete(id);
       if (!document) {
         throw new Error();
       }
-      resolve(document.url);
+      return(document.url);
     } catch (error) {
-      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+      throw new Error(`Unable to delete document with id ${id}; ${error.message}`)
     }
-  });
 };
 
 // ACL implemented
@@ -168,21 +154,19 @@ deleteDocument = (fileId) => {
 // }
 
 // ACL implemented
-getDocument = async (projectName, fileId) => {
-  return new Promise(async (resolve, reject) => {
+async function getDocument (id, fileId) {
     try {
-      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`;
+      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
       const file = await File.findOne({ _id: fileId, project: projectUrl });
 
       if (!file) {
         reject({ status: 404, message: "File not found" });
       }
 
-      resolve(file);
+      return (file);
     } catch (error) {
-      reject({ reason: `MongoDB error: ${error.message}`, status: 500 });
+      throw new Error(`Unable to get document with id ${id}; ${error.message}`)
     }
-  });
 };
 
 // only admin
@@ -230,5 +214,5 @@ module.exports = {
   createProjectDoc,
   pushProjectToCreator,
   removeProjectFromUser,
-  findAllProjectDocuments
+  findAllProjectDocuments,
 };

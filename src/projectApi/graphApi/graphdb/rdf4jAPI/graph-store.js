@@ -5,10 +5,9 @@ const errorHandlerAxios = require('../../../../util/errorHandlerAxios')
 const btoa = require('btoa-lite')
 
 
-createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
-    return new Promise(async (resolve, reject) => {
+async function createNamedGraph (repositoryId, { namedGraph, baseURI, data }, token) {
         try {
-            const body = JSON.stringify(defaultBody(context, baseURI, data))
+            const body = JSON.stringify(defaultBody(namedGraph, baseURI, data))
 
             const options = {
                 'method': 'post',
@@ -21,17 +20,15 @@ createNamedGraph = (repositoryId, { context, baseURI, data }, token) => {
             };
 
             const response = await axios(options)
-            resolve(response.data)
+            return(response.data)
 
         } catch (error) {
-            const {reason, status} = errorHandlerAxios(error)
-            reject({ reason, status })
+            throw new Error(`Failed to create named graph ${namedGraph}; ${error.message}`)
         }
-    })
+    
 }
 
-getNamedGraph = (namedGraph, repositoryId, token, format) => {
-    return new Promise(async (resolve, reject) => {
+async function getNamedGraph (namedGraph, repositoryId, token, format) {
         try {
             const mimeTypes = {
                 "turtle": "text/turtle"
@@ -49,38 +46,30 @@ getNamedGraph = (namedGraph, repositoryId, token, format) => {
             };
 
             const response = await axios(options)
-            resolve(response.data)
+            return(response.data)
         } catch (error) {
-            const {reason, status} = errorHandlerAxios(error)
-            reject({ reason, status })
+            throw new Error(`Error fetching named graph ${namedGraph}; ${error.message}`)
         }
-    })
 }
 
-deleteNamedGraph = (namedGraph, repositoryId, token) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const formData = new FormData()
-            console.log('clearing Graph ', namedGraph)
-            formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
-            const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
-            const headers = {
-                'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`,
-                'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
-            }
-
-            const response = await axios.post(url, formData, { headers })
-            resolve(response.data)
-
-        } catch (error) {
-            const {reason, status} = errorHandlerAxios(error)
-            reject({ reason, status })
+async function deleteNamedGraph (namedGraph, repositoryId, token) {
+    try {
+        const formData = new FormData()
+        console.log('clearing Graph ', namedGraph)
+        formData.append('update', `CLEAR GRAPH <${namedGraph}>`)
+        const url = `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/statements`
+        const headers = {
+            'Authorization': `Basic ${btoa(process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW)}`,
+            'Content-Type': `multipart/form-data; boundary=${formData._boundary}`
         }
-    })
+        const response = await axios.post(url, formData, { headers })
+        return(response.data)
+    } catch (error) {
+        throw new Error(`Failed to delete named graph ${namedGraph}; ${error.message}`)
+    }
 }
 
-getAllNamedGraphs = (repositoryId, token) => {
-    return new Promise(async (resolve, reject) => {
+async function getAllNamedGraphs(repositoryId, token) {
         try {
             const options = {
                 'method': 'GET',
@@ -90,11 +79,10 @@ getAllNamedGraphs = (repositoryId, token) => {
                 }
             };
             const response = await axios(options)
-            resolve(response.data)
+            return (response.data)
 
         } catch (error) {
-            const {reason, status} = errorHandlerAxios(error)
-            reject({ reason, status })
+            throw new Error(`Error fetching  all named Graphs; ${error.message}`)
         }
     })
 }

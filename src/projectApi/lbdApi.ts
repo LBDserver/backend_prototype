@@ -5,56 +5,64 @@ import * as errorHandler from '../util/errorHandler'
 import { v4 } from "uuid"
 import { adaptQuery, queryPermissions } from "../authApi/authorisation/basicPermissions"
 import { IReturnProject } from '../interfaces/projectInterface'
+import undoDatabaseActions from '../util/databaseCleanup'
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
-function createProject(req) {
-  return new Promise<IReturnProject>(async (resolve, reject) => {
-    const id = v4();
-    const metaTitle = `${process.env.DOMAIN_URL}/lbd/${id}.meta`;
-    const repoUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
-    const acl = `${process.env.DOMAIN_URL}/lbd/${id}/.acl`
+async function createProject(req) {
+  const id = v4();
+  const metaTitle = `${process.env.DOMAIN_URL}/lbd/${id}.meta`;
+  const repoUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
+  const acl = `${process.env.DOMAIN_URL}/lbd/${id}/.acl`
 
+  const { title, description, open } = req.body;
+  const creator = req.user;
+
+  if (!creator) {
+    throw new Error("You must be authenticated to create a new LBDserver Project")
+  }
+
+  const writeCommands = {
+    createProjectRepository: {done: false, undoArgs: [id]},
+    createProjectDoc: {done: false, undoArgs: [id]},
+    saveProjectToUser: {done: false, undoArgs: [id, creator]}
+  }
+
+  try {
+    const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, title, description);
+    creator.projects.push(id);
+
+    // write everything to the appropriate database
+    writeCommands.createProjectRepository.done = await graphStore.createRepository(title, id)
+
+    // not in writeCommands because automatically removed with project repository
+    await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
+    await createDefaultAclGraph(id, creator, acl, open);
+    writeCommands.createProjectDoc.done = await docStore.createProjectDoc(repoUrl, id);
+    writeCommands.saveProjectToUser.done = await creator.save();
+
+    return ({
+      metadata: repoMetaData,
+      id,
+      graphs: {},
+      documents: {},
+      message: "Project successfully created",
+    });
+  } catch (error) {
+    let undoError = "SUCCESS"
     try {
-      const { title, description, open } = req.body;
-      const creator = req.user;
-
-      if (!creator) {
-        throw new Error("You must be authenticated to create a new LBDserver Project")
-      }
-
-      const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, title, description);
-      creator.projects.push(id);
-
-      // write everything to the appropriate database
-      await graphStore.createRepository(title, id);
-      await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
-      await createDefaultAclGraph(id, creator, acl, open);
-      await docStore.createProjectDoc(repoUrl, id);
-      await creator.save();
-
-      resolve({
-        metadata: repoMetaData,
-        id,
-        graphs: {},
-        documents: {},
-        message: "Project successfully created",
-      });
-
-    } catch (error) {
-
-
-      console.error(error)
-      reject(error)
+      await undoDatabaseActions(writeCommands)
+    } catch (err) {
+      undoError = err.message
     }
-  })
+    throw new Error(`Failed to create Project; ${error.message}. Undoing past operations: ${undoError}`)
+  }
 };
 
 // helper function to upload the default acls at project initialisation. For now, these are the public and private graphs.
-function createDefaultAclGraph(id, creator, aclUrl, open) {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      let data = `
+async function createDefaultAclGraph(id, creator, aclUrl, open) {
+  try {
+    let data = `
 # Root ACL resource for LBDserver project with id ${id}
 @prefix acl: <http://www.w3.org/ns/auth/acl#>.
 @prefix lbd: <https://lbdserver.org/vocabulary#>.
@@ -71,25 +79,24 @@ function createDefaultAclGraph(id, creator, aclUrl, open) {
 
 `;
 
-      if (open) {
-        data = data + `
+    if (open) {
+      data = data + `
   <#visitor>
     a acl:Authorization;
     acl:agentClass foaf:Agent;
     acl:mode acl:Read.`
-      }
-      const aclData = {
-        context: aclUrl,
-        baseURI: aclUrl + "#",
-        data,
-      };
-      await graphStore.createNamedGraph(id, aclData, "");
-      resolve();
-    } catch (error) {
-      console.log("error", error);
-      reject(error);
     }
-  });
+    const aclData = {
+      context: aclUrl,
+      baseURI: aclUrl + "#",
+      data,
+    };
+    await graphStore.createNamedGraph(id, aclData, "");
+    throw new Error('something went wrong.')
+    return true;
+  } catch (error) {
+    throw new Error(`Failed creating the default ACL graph; ${error.message}`)
+  }
 };
 
 // send back all projects OWNED by the user (user profile from doc store)
@@ -151,7 +158,7 @@ function getOneProject(req) {
   // } else {
   //   return new Promise(async(resolve, reject) => {
   //     try {
-        
+
   //     } catch (error) {
   //       reject(error)
   //     }

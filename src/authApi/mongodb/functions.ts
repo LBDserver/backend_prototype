@@ -3,7 +3,7 @@ import User, {IUserDocument, IUserModel} from '../../projectApi/documentApi/mong
 import * as jwt from 'jsonwebtoken'
 import * as express from 'express'
 
-async function register(props: IRegisterRequest): Promise<IReturnUser> {
+function register(props: IRegisterRequest): Promise<IReturnUser> {
     return new Promise(async (resolve, reject) => {
         try {
             const user: IUserDocument = new User({ ...props, uri: `${process.env.DOMAIN_URL}/${props.username}` })
@@ -17,7 +17,7 @@ async function register(props: IRegisterRequest): Promise<IReturnUser> {
     })
 }
 
-async function login(props: ILoginRequest): Promise<IReturnUser> {
+function login(props: ILoginRequest): Promise<IReturnUser> {
     return new Promise(async (resolve, reject) => {
         try {
             const user: IUserDocument = await User.findByCredentials(props.email, props.password)
@@ -30,7 +30,7 @@ async function login(props: ILoginRequest): Promise<IReturnUser> {
     })
 }
 
-async function authenticate(req: express.Request): Promise<IAuthRequest> {
+function authenticate(req: express.Request): Promise<IAuthRequest> {
     return new Promise(async (resolve, reject) => {
         try {
             if (req.header("Authorization")) {
