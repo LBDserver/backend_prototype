@@ -37,7 +37,6 @@ async function authorize(req: IAuthRequest): Promise<IAuthRequest> {
 
         req.permissions = permissions
         console.log('permissions', permissions)
-        console.info(`Methods allowed: ${allowed}`)
 
         return req
     } catch (error) {

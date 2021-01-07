@@ -22,6 +22,13 @@ const models: TsoaRoute.Models = {
         "additionalProperties": {"dataType":"string"},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IQueryResults": {
+        "dataType": "refObject",
+        "properties": {
+        },
+        "additionalProperties": {"dataType":"array","array":{"dataType":"any"}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "IReturnProject": {
         "dataType": "refObject",
         "properties": {
@@ -29,6 +36,8 @@ const models: TsoaRoute.Models = {
             "id": {"dataType":"string","required":true},
             "graphs": {"ref":"IResourceObject","required":true},
             "documents": {"ref":"IResourceObject","required":true},
+            "permissions": {"dataType":"array","array":{"dataType":"string"}},
+            "queryResults": {"ref":"IQueryResults"},
             "message": {"dataType":"string"},
         },
         "additionalProperties": false,

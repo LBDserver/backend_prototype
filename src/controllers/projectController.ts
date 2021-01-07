@@ -91,14 +91,4 @@ export class ProjectController extends Controller {
             serverErrorResponse(500, { reason: error.message })
         }
     }
-
-    // @Put('/{id}')
-    // public async update(id: string, @BodyProp() description: string) : Promise<void> {
-    //     await Todo.findByIdAndUpdate(id, {description})
-    // }
-
-    // @Delete('/{id}')
-    // public async remove(id: string) : Promise<void> {
-    //     await Todo.findByIdAndDelete(id)
-    // }
 }

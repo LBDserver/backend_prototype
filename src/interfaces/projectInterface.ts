@@ -14,7 +14,13 @@ interface IReturnProject {
     id: string,
     graphs: IResourceObject,
     documents: IResourceObject,
+    permissions?: string[],
+    queryResults?: IQueryResults,
     message?: string
+}
+
+interface IQueryResults {
+    [key: string]: any[]
 }
 
 interface IResourceObject {

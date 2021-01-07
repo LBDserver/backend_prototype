@@ -324,8 +324,6 @@ queryPermissions = (user, acl, project) => {
     })
 }
 
-
-
 // agent groups are local here
 findGroupMembers = (groupUri, project) => {
     return new Promise(async (resolve, reject) => {

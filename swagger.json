@@ -13,6 +13,14 @@
 					"type": "string"
 				}
 			},
+			"IQueryResults": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"items": {},
+					"type": "array"
+				}
+			},
 			"IReturnProject": {
 				"properties": {
 					"metadata": {
@@ -26,6 +34,15 @@
 					},
 					"documents": {
 						"$ref": "#/components/schemas/IResourceObject"
+					},
+					"permissions": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"queryResults": {
+						"$ref": "#/components/schemas/IQueryResults"
 					},
 					"message": {
 						"type": "string"

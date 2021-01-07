@@ -102,139 +102,104 @@ async function createDefaultAclGraph(id, creator, aclUrl, open) {
 };
 
 // send back all projects OWNED by the user (user profile from doc store)
-function getAllProjects(req) {
-  return new Promise<IReturnProject[]>(async (resolve, reject) => {
-    try {
-      const projects = []
-      for (const project of req.user.projects) {
-        const data = await findProjectData(project)
-        projects.push(data)
-      }
-      return resolve(projects);
-    } catch (error) {
-      console.error(error)
-      reject(error);
+async function getAllProjects(req) {
+  try {
+    const projects = []
+    for (const project of req.user.projects) {
+      const data = await findProjectData(project)
+      projects.push(data)
     }
-  })
+    return (projects);
+  } catch (error) {
+    throw new Error(`Could not retrieve all projects; ${error.message}`)
+  }
 };
 
-function getPublicProjects() {
-  return new Promise<IReturnProject[]>(async (resolve, reject) => {
-    try {
-      const publicProjects = []
-      const projects = await docStore.findAllProjectDocuments()
-      for (const project of projects) {
-        const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
-        if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
-          const projectData = await findProjectData(project._id)
-          publicProjects.push(projectData)
-        }
+async function getPublicProjects() {
+  try {
+    const publicProjects = []
+    const projects = await docStore.findAllProjectDocuments()
+    for (const project of projects) {
+      const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
+      if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
+        const projectData = await findProjectData(project._id)
+        publicProjects.push(projectData)
       }
-
-      resolve(publicProjects)
-    } catch (error) {
-      reject(error)
     }
-  })
+
+    return (publicProjects)
+  } catch (error) {
+    throw new Error(`Could not get public projects; ${error.message}`)
+  }
 }
 
 // send back project metadata and named graphs.
-function getOneProject(req) {
-  // if (req.query.query) {
-  //   return new Promise(async(resolve, reject) => {
-  //     try {
-  //       const results = await queryProject(req);
-  //       resolve({results})
-  //     } catch (error) {
-  //       reject(error)
-  //     }
-  //   })
-  // } else if (req.query.onlyPermissions) {
-  //   return new Promise(async(resolve, reject) => {
-  //     try {
-  //       resolve({ permissions: Array.from(req.permissions) });
-  //     } catch (error) {
-  //       reject(error)
-  //     }
-  //   })
-  // } else {
-  //   return new Promise(async(resolve, reject) => {
-  //     try {
+async function getOneProject(req) {
+  try {
+    const projectName = req.params.projectName;
+    const projectData = await findProjectData(projectName)
+    const permissions: string[] = Array.from(req.permissions)
+    const project: IReturnProject = {
+      ...projectData,
+      permissions
+    }
+    if (req.query.query) {
+      const results = await queryProject(req);
+      project.queryResults = results
+    }
 
-  //     } catch (error) {
-  //       reject(error)
-  //     }
-  //   })
-  // }
-  // return new Promise<IReturnProject>(async (resolve, reject) => {
-  //   try {
-  //     if (req.query.query) {
-  //       console.log("req.query", req.query);
-  //       const results = await queryProject(req);
-  //       resolve({results})
-  //     } else if (req.query.onlyPermissions) {
-  //       resolve({ permissions: Array.from(req.permissions) });
-  //     } else {
-  //       const projectName = req.params.projectName;
-
-  //       const projectData = await findProjectData(projectName)
-  //       projectData.permissions = Array.from(req.permissions)
-  //       resolve(projectData);
-  //     }
-  //   } catch (error) {
-  //     reject(error)
-  //   }
-  // })
+    return project
+  } catch (error) {
+    throw new Error(`Unable to get project; ${error.message}`)
+  }
 };
 
-function findProjectData(projectName) {
-  return new Promise<IReturnProject>(async (resolve, reject) => {
-    try {
-      const projectGraph = await graphStore.getNamedGraph(
-        `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
+async function findProjectData(projectName) {
+  try {
+    const projectGraph = await graphStore.getNamedGraph(
+      `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
+      projectName,
+      "",
+      "turtle"
+    );
+    const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
+    const files = await File.find({
+      project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
+    });
+    let documents = {};
+    for (const file of files) {
+      documents[file.url] = await graphStore.getNamedGraph(
+        `${file.url}.meta`,
         projectName,
         "",
         "turtle"
       );
-      const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
-      const files = await File.find({
-        project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
-      });
-      let documents = {};
-      for (const file of files) {
-        documents[file.url] = await graphStore.getNamedGraph(
-          `${file.url}.meta`,
+    }
+
+    let graphs = {};
+    for (const result of allNamed.results.bindings) {
+      if (
+        !result.contextID.value.endsWith("acl") &&
+        !result.contextID.value.endsWith("meta")
+      ) {
+        graphs[result.contextID.value] = await graphStore.getNamedGraph(
+          `${result.contextID.value}.meta`,
           projectName,
           "",
           "turtle"
-        );
+        );;
       }
-
-      let graphs = {};
-      for (const result of allNamed.results.bindings) {
-        if (
-          !result.contextID.value.endsWith("acl") &&
-          !result.contextID.value.endsWith("meta")
-        ) {
-          graphs[result.contextID.value] = await graphStore.getNamedGraph(
-            `${result.contextID.value}.meta`,
-            projectName,
-            "",
-            "turtle"
-          );;
-        }
-      }
-
-      resolve({
-        metadata: projectGraph,
-        graphs,
-        documents,
-        id: projectName
-      });
-    } catch (error) {
-      reject(error)
     }
-  })
+
+    return ({
+      metadata: projectGraph,
+      graphs,
+      documents,
+      id: projectName
+    });
+  } catch (error) {
+    throw new Error(`Could not find project data for project with id ${projectName}; ${error.message}`)
+  }
 }
 
 // erase a project from existence
@@ -278,53 +243,37 @@ async function deleteProject(req) {
 };
 
 //////////////////////////// QUERY API ///////////////////////////////
-function queryProject(req) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      if (req.method === "GET") {
-        const query = encodeURIComponent(req.query.query);
-        if (
-          req.query.query.toLowerCase().includes("select") &&
-          !query.toLowerCase().includes("insert") &&
-          !query.toLowerCase().includes("delete")
-        ) {
-          const projectName = req.params.projectName;
-          const results = await graphStore.queryRepository(projectName, query);
-          resolve(results);
-        } else {
-          throw {
-            reason:
-              "This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries",
-            status: 400,
-          };
-        }
-      }
-      //  else if (req.method === 'POST') {
-      //     const update = encodeURIComponent(req.query.update)
-      //     const projectName = req.params.projectName
-      //     await graphStore.updateRepositorySparql(projectName, update)
-      //     return res.status(204).send()
-      // }
-    } catch (error) {
-      console.error('error', error)
-      reject(error);
+async function queryProject(req) {
+  try {
+    if (req.method === "GET") {
+      const query = encodeURIComponent(req.query.query);
+      if (
+        req.query.query.toLowerCase().includes("select") &&
+        !query.toLowerCase().includes("insert") &&
+        !query.toLowerCase().includes("delete")
+      ) {
+        const projectName = req.params.projectName;
+        const results = await graphStore.queryRepository(projectName, query);
+        return (results);
+      } else {
+        throw new Error("This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries")
+      };
     }
-  });
+  } catch (error) {
+    throw new Error(`Could not complete query; ${error.message}`)
+  }
 };
 
-function updateNamedGraph(req) {
-  return new Promise<void>(async (resolve, reject) => {
-    try {
-      console.log('req.query.update', req.query.update)
-      const update = encodeURIComponent(req.query.update)
-      const projectName = req.params.projectName
-      await graphStore.updateRepositorySparql(projectName, update)
-      resolve()
-    } catch (error) {
-      console.error('error', error)
-      reject(error)
-    }
-  })
+async function updateNamedGraph(req) {
+  try {
+    console.log('req.query.update', req.query.update)
+    const update = encodeURIComponent(req.query.update)
+    const projectName = req.params.projectName
+    await graphStore.updateRepositorySparql(projectName, update)
+    return true
+  } catch (error) {
+    throw new Error(`Could not update named graph; ${error.message}`)
+  }
 };
 
 //////////////////////////// document API ///////////////////////////////
@@ -544,92 +493,72 @@ async function deleteNamedGraph(req, res) {
   }
 };
 
-function setAcl(req) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let acl, customAcl
-      const projectName = req.params.projectName;
+async function setAcl(req) {
+  try {
+    let acl, customAcl
+    const projectName = req.params.projectName;
 
-      // default: if not specified, the main project acl is chosen
-      if (!req.body.acl && !req.files.acl) {
-        acl = `https://lbdserver.org/lbd/${projectName}/.acl`;
+    // default: if not specified, the main project acl is chosen
+    if (!req.body.acl && !req.files.acl) {
+      acl = `https://lbdserver.org/lbd/${projectName}/.acl`;
 
-        // an acl graph is sent with the upload, as well as a context for the acl
-      } else if (req.files.acl) {
-        console.log("custom acl detected");
+      // an acl graph is sent with the upload, as well as a context for the acl
+    } else if (req.files.acl) {
+      console.log("custom acl detected");
 
-        if (!req.files.aclName) {
-          throw new Error(
-            "When uploading a custom acl file, please set a context URL for it"
-          );
-        }
-
-        // create named graph in the project repository from acl file, set acl here to its url
-        const aclData = {
-          context: req.body.aclName,
-          baseURI: req.body.aclName + "#",
-          data: req.files.acl[0].buffer.toString(),
-        };
-
-        customAcl = await graphStore.createNamedGraph(projectName, aclData, "");
-        // customAclMetaData = await graphStore.aclMeta(aclData.context, req.user.uri)
-        // const aclMeta = {
-        //     context: req.body.context + '.acl.meta',
-        //     baseURI: req.body.context + '.acl.meta#',
-        //     data: customAclMetaData
-        // }
-
-        // await graphStore.createNamedGraph(projectName, aclMeta, '')
-        acl = aclData.context;
-        // }
-        // else if (req.body.acl === 'private' || req.body.acl === 'https://lbdserver.org/acl/private.acl') {
-        //     acl = 'https://lbdserver.org/acl/private.acl'
-        // } else if (req.body.acl === 'public' || req.body.acl === 'https://lbdserver.org/acl/public.acl') {
-        //     acl = 'https://lbdserver.org/acl/public.acl'
-        // } else if (req.body.context.endsWith('.acl')) {
-        //     acl = req.body.context
-
-        // the acl referred to in req.body.acl is set (if it exists)
-      } else {
-        try {
-          await graphStore.getNamedGraph(
-            req.body.acl,
-            projectName,
-            "",
-            "turtle"
-          );
-          acl = req.body.acl;
-        } catch (error) {
-          throw {
-            reason:
-              "The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files",
-            status: 400,
-          };
-        }
+      if (!req.files.aclName) {
+        throw new Error(
+          "When uploading a custom acl file, please set a context URL for it"
+        );
       }
 
-      resolve(acl);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-function setGraph(req, projectName, acl, context) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const graphData = {
-        context,
-        baseURI: context + "#",
-        acl,
-        data: undefined
+      // create named graph in the project repository from acl file, set acl here to its url
+      const aclData = {
+        context: req.body.aclName,
+        baseURI: req.body.aclName + "#",
+        data: req.files.acl[0].buffer.toString(),
       };
 
-      // an existing graph is sent along
-      if (req.files.graph) {
-        graphData.data = req.files.graph[0].buffer.toString()
-      } else { // a blank graph is to be created
-        graphData.data = `
+      customAcl = await graphStore.createNamedGraph(projectName, aclData, "");
+      acl = aclData.context;
+    } else {
+      try {
+        await graphStore.getNamedGraph(
+          req.body.acl,
+          projectName,
+          "",
+          "turtle"
+        );
+        acl = req.body.acl;
+      } catch (error) {
+        throw {
+          reason:
+            "The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files",
+          status: 400,
+        };
+      }
+    }
+
+    return acl
+  } catch (error) {
+    throw new Error(`Could not create ACL file; ${error.message}`)
+  }
+};
+
+async function setGraph(req, projectName, acl, context) {
+  try {
+    const graphData = {
+      context,
+      baseURI: context + "#",
+      acl,
+      data: undefined
+    };
+
+    // an existing graph is sent along
+    if (req.files.graph) {
+      graphData.data = req.files.graph[0].buffer.toString()
+    } else { // a blank graph is to be created
+      graphData.data = `
 @prefix : <${context}#>.
 @prefix sp: <http://spinrdf.org/sp#>.
 @prefix bot: <https://w3id.org/bot#>.
@@ -637,44 +566,41 @@ function setGraph(req, projectName, acl, context) {
 
 : a sp:NamedGraph .
         `
-      }
-
-      await graphStore.createNamedGraph(projectName, graphData, "");
-      console.log("created graph with context", graphData.context);
-
-      resolve(graphData.context);
-    } catch (error) {
-      reject(error);
     }
-  });
+
+    await graphStore.createNamedGraph(projectName, graphData, "");
+    console.log("created graph with context", graphData.context);
+    return (graphData.context);
+
+  } catch (error) {
+    throw new Error(`Could not create graph with context ${context}; ${error.message}`)
+  }
 };
 
-function setMetaGraph(projectName, uri, acl, label, description) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let graphMetaData;
-      graphMetaData = await graphStore.namedGraphMeta(
-        uri,
-        acl,
-        label,
-        description
-      );
+async function setMetaGraph(projectName, uri, acl, label, description) {
+  try {
+    let graphMetaData;
+    graphMetaData = await graphStore.namedGraphMeta(
+      uri,
+      acl,
+      label,
+      description
+    );
 
-      const graphMeta = {
-        context: uri + ".meta",
-        baseURI: uri + ".meta#",
-        data: graphMetaData,
-        label,
-        description,
-      };
+    const graphMeta = {
+      context: uri + ".meta",
+      baseURI: uri + ".meta#",
+      data: graphMetaData,
+      label,
+      description,
+    };
 
-      await graphStore.createNamedGraph(projectName, graphMeta, "");
-      console.log("created metadata graph with context", graphMeta.context);
-      resolve(graphMetaData);
-    } catch (error) {
-      reject(error);
-    }
-  });
+    await graphStore.createNamedGraph(projectName, graphMeta, "");
+    console.log("created metadata graph with context", graphMeta.context);
+    return (graphMetaData);
+  } catch (error) {
+    throw new Error(`Could not create metadata graph with context ${uri}; ${error.message}`)
+  }
 };
 
 module.exports = {
