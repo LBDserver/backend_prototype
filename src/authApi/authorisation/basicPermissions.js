@@ -266,7 +266,7 @@ queryPermissions = (user, acl, project) => {
     
                 const agentResults = await graphStore.queryRepository(project, encodeURIComponent(agentQuery))
                 for await (item of agentResults.results.bindings) {
-                    if (item.agent.value === user.url || item.agent.email === user.email && user.email !== undefined) {
+                    if (item.agent.value === user.uri || item.agent.email === user.email && user.email !== undefined) {
                         allowedModes.add(item.permission.value)
                     }
                 }
@@ -301,10 +301,10 @@ queryPermissions = (user, acl, project) => {
 
             // for await (item of results.results.bindings) {
             //     {
-            //         if (item.rel.value === "http://www.w3.org/ns/auth/acl#agent" && item.agent.value == user.url) {
+            //         if (item.rel.value === "http://www.w3.org/ns/auth/acl#agent" && item.agent.value == user.uri) {
             //             allowedModes.add(item.permission.value)
             //         } else if (item.rel.value === "http://www.w3.org/ns/auth/acl#agentClass") {
-            //             if (item.agent.value === "https://lbdserver.org/vocabulary#Owner" && owners.includes(user.url)) {
+            //             if (item.agent.value === "https://lbdserver.org/vocabulary#Owner" && owners.includes(user.uri)) {
             //                 allowedModes.add(item.permission.value)
             //             } else if (item.agent.value === "https://lbdserver.org/vocabulary#Agent" || item.agent.value === "http://www.w3.org/ns/auth/acl#AuthenticatedAgent") {
             //                 allowedModes.add(item.permission.value)

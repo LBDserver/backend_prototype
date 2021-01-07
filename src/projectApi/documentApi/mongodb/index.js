@@ -1,19 +1,3 @@
-const {
-    uploadDocuments,
-    deleteDocument,
-    getDocument,
-    deleteProjectDoc,
-    createProjectDoc,
-    pushProjectToCreator,
-    removeProjectFromUser
-  } = require('./mongoApi')
+const mongoApi = require('./mongoApi')
 
-module.exports = {
-    uploadDocuments,
-    deleteDocument,
-    getDocument,
-    deleteProjectDoc,
-    createProjectDoc,
-    pushProjectToCreator,
-    removeProjectFromUser
-  };
+module.exports = mongoApi

@@ -16,13 +16,17 @@ export interface IUserModel extends mongoose.Model<IUserDocument> {
     findByCredentials(email: string, password: string): IUserDocument;
 }
 
-
 const userSchema: mongoose.Schema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
         trim: true,
         lowercase: true,
+        unique: true
+    },
+    uri: {
+        type: String,
+        required: true,
         unique: true
     },
     email: {

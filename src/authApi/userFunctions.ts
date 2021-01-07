@@ -44,7 +44,6 @@ async function authenticate(req: express.Request): Promise<IAuthRequest> {
     return new Promise(async (resolve, reject) => {
         try {
             const authRequest = await authModule.authenticate(req)
-            console.log('authRequest.user', authRequest.user)
             resolve(authRequest)
         } catch (error) {
             console.error('error', error)

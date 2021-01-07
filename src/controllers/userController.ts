@@ -6,6 +6,7 @@ import * as express from 'express'
 const userExample = {
     user: {
         username: "max",
+        uri: "https://lbdserver.org/max",
         email: "max@mustermann.be",
         projects: [],
         tokens: []

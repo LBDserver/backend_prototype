@@ -6,7 +6,7 @@ import * as express from 'express'
 async function register(props: IRegisterRequest): Promise<IReturnUser> {
     return new Promise(async (resolve, reject) => {
         try {
-            const user: IUserDocument = new User({ ...props })
+            const user: IUserDocument = new User({ ...props, uri: `${process.env.DOMAIN_URL}/${props.username}` })
             await user.save()
             const token = await user.generateAuthToken()
             resolve({ user, token })

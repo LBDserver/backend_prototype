@@ -1,8 +1,6 @@
 import * as express from 'express'
 import { IUserDocument } from '../projectApi/documentApi/mongodb/models/UserModel'
 
-
-
 interface ILoginRequest {
     email: string,
     password: string
@@ -19,6 +17,7 @@ interface IRegisterRequest extends ILoginRequest {
 
 interface IUser {
     username: string,
+    uri: string,
     email: string,
     password?: string,
     tokens: string[],

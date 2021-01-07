@@ -38,7 +38,7 @@
 					"documents"
 				],
 				"type": "object",
-				"additionalProperties": true
+				"additionalProperties": false
 			},
 			"ICreateProject": {
 				"properties": {
@@ -58,11 +58,14 @@
 					"open"
 				],
 				"type": "object",
-				"additionalProperties": true
+				"additionalProperties": false
 			},
 			"IUser": {
 				"properties": {
 					"username": {
+						"type": "string"
+					},
+					"uri": {
 						"type": "string"
 					},
 					"email": {
@@ -86,12 +89,13 @@
 				},
 				"required": [
 					"username",
+					"uri",
 					"email",
 					"tokens",
 					"projects"
 				],
 				"type": "object",
-				"additionalProperties": true
+				"additionalProperties": false
 			},
 			"IReturnUser": {
 				"properties": {
@@ -107,7 +111,7 @@
 					"token"
 				],
 				"type": "object",
-				"additionalProperties": true
+				"additionalProperties": false
 			},
 			"IRegisterRequest": {
 				"properties": {
@@ -127,7 +131,7 @@
 					"username"
 				],
 				"type": "object",
-				"additionalProperties": true
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -143,8 +147,46 @@
 	"openapi": "3.0.0",
 	"paths": {
 		"/lbd": {
+			"get": {
+				"operationId": "GetAllProjects",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/IReturnProject"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			},
 			"post": {
-				"operationId": "Create",
+				"operationId": "CreateProject",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -189,6 +231,95 @@
 				}
 			}
 		},
+		"/lbd/public": {
+			"get": {
+				"operationId": "GetPublicProjects",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/IReturnProject"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/lbd/{projectName}": {
+			"get": {
+				"operationId": "GetOneProject",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/IReturnProject"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectName",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/register": {
 			"post": {
 				"operationId": "Register",
@@ -205,6 +336,7 @@
 										"value": {
 											"user": {
 												"username": "max",
+												"uri": "https://lbdserver.org/max",
 												"email": "max@mustermann.be",
 												"projects": [],
 												"tokens": []
@@ -265,6 +397,7 @@
 										"value": {
 											"user": {
 												"username": "max",
+												"uri": "https://lbdserver.org/max",
 												"email": "max@mustermann.be",
 												"projects": [],
 												"tokens": []

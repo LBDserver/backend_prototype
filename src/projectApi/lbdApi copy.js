@@ -77,10 +77,10 @@ createDefaultAclGraph = (id, creator, aclUrl, public) => {
 # The owner has all permissions
 <#owner>
     a acl:Authorization;
-    acl:agent <${creator.url}>;
+    acl:agent <${creator.uri}>;
     acl:mode acl:Read, acl:Write, acl:Control.
 
-<${creator.url}> vcard:email "${creator.email}".
+<${creator.uri}> vcard:email "${creator.email}".
 
 `;
 
@@ -281,7 +281,7 @@ updateNamedGraph = async (req, res) => {
 uploadDocumentToProject = async (req, res) => {
   try {
     const projectName = req.params.projectName;
-    const owner = req.user.url;
+    const owner = req.user.uri;
     const data = req.files.file[0].buffer;
 
     // upload document
@@ -521,7 +521,7 @@ setAcl = (req, context) => {
         };
 
         customAcl = await graphStore.createNamedGraph(projectName, aclData, "");
-        // customAclMetaData = await graphStore.aclMeta(aclData.context, req.user.url)
+        // customAclMetaData = await graphStore.aclMeta(aclData.context, req.user.uri)
         // const aclMeta = {
         //     context: req.body.context + '.acl.meta',
         //     baseURI: req.body.context + '.acl.meta#',

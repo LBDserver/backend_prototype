@@ -53,6 +53,16 @@ function removeProjectFromUser(id, user) {
     });
   }
 
+  function findAllProjectDocuments() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const projects = await Project.find()
+        resolve(projects)
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
 // ACL implemented
 // getProjectDoc = ({ projectId, user }) => {
 //     return new Promise(async (resolve, reject) => {
@@ -219,5 +229,6 @@ module.exports = {
   deleteProjectDoc,
   createProjectDoc,
   pushProjectToCreator,
-  removeProjectFromUser
+  removeProjectFromUser,
+  findAllProjectDocuments
 };
