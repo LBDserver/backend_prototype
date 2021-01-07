@@ -26,8 +26,9 @@ interface IUser {
 
 // when extending with other modules, integrate in the type by setting a |
 interface IAuthRequest extends express.Request {
-    user?: IUserDocument,
-    token?: string
+    user: IUserDocument | undefined,
+    token: string | undefined,
+    permissions?: string[] | undefined
 }
 
 export {

@@ -28,7 +28,9 @@ const reverseActions = {
     createProjectMetadata: graphStore.deleteNamedGraph,
     createProjectAcl: graphStore.deleteNamedGraph,
     createProjectDoc: docStore.deleteProjectDoc,
-    saveProjectToUser: docStore.removeProjectFromUser
+    saveProjectToUser: docStore.deleteProjectFromUser,
+    deleteProjectDoc: docStore.createProjectDoc,
+    deleteProjectFromUser: docStore.saveProjectToUser
 }
 
 export default undoDatabaseActions

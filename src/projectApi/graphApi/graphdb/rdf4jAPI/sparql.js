@@ -19,7 +19,7 @@ async function queryRepository(id, query) {
       },
     };
     const results = await axios(options);
-    resolve(results.data);
+    return results.data;
   } catch (error) {
     throw new Error(
       `Unable to query repostory with id ${id}; ${error.message}`

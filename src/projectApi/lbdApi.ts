@@ -23,9 +23,9 @@ async function createProject(req) {
   }
 
   const writeCommands = {
-    createProjectRepository: {done: false, undoArgs: [id]},
-    createProjectDoc: {done: false, undoArgs: [id]},
-    saveProjectToUser: {done: false, undoArgs: [id, creator]}
+    createProjectRepository: { done: false, undoArgs: [id] },
+    createProjectDoc: { done: false, undoArgs: [id] },
+    saveProjectToUser: { done: false, undoArgs: [id, creator] }
   }
 
   try {
@@ -34,12 +34,12 @@ async function createProject(req) {
 
     // write everything to the appropriate database
     writeCommands.createProjectRepository.done = await graphStore.createRepository(title, id)
+    writeCommands.createProjectDoc.done = await docStore.createProjectDoc(repoUrl, id);
+    writeCommands.saveProjectToUser.done = await creator.save();
 
     // not in writeCommands because automatically removed with project repository
     await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
     await createDefaultAclGraph(id, creator, acl, open);
-    writeCommands.createProjectDoc.done = await docStore.createProjectDoc(repoUrl, id);
-    writeCommands.saveProjectToUser.done = await creator.save();
 
     return ({
       metadata: repoMetaData,
@@ -49,12 +49,15 @@ async function createProject(req) {
       message: "Project successfully created",
     });
   } catch (error) {
+
+    // if some database operation fails, then all the database operations preceding it should be made undone (hence the "writeCommands")
     let undoError = "SUCCESS"
     try {
       await undoDatabaseActions(writeCommands)
     } catch (err) {
       undoError = err.message
     }
+
     throw new Error(`Failed to create Project; ${error.message}. Undoing past operations: ${undoError}`)
   }
 };
@@ -92,7 +95,6 @@ async function createDefaultAclGraph(id, creator, aclUrl, open) {
       data,
     };
     await graphStore.createNamedGraph(id, aclData, "");
-    throw new Error('something went wrong.')
     return true;
   } catch (error) {
     throw new Error(`Failed creating the default ACL graph; ${error.message}`)
@@ -236,27 +238,43 @@ function findProjectData(projectName) {
 }
 
 // erase a project from existence
-function deleteProject(req) {
-  return new Promise<void>(async (resolve, reject) => {
+async function deleteProject(req) {
+  const id = req.params.projectName;
+  const repoUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
+  const owner = req.user;
+
+  const writeCommands = {
+    deleteProjectDoc: { done: false, undoArgs: [repoUrl, id] },
+    deleteProjectFromUser: { done: false, undoArgs: [id, owner] }
+  }
+
+  try {
+
+
+    // delete from list in document store (user)
+    let newProjectList = owner.projects.filter((project) => {
+      return project !== id;
+    });
+    owner.projects = newProjectList;
+
+    writeCommands.deleteProjectFromUser = await owner.save();
+    writeCommands.deleteProjectDoc.done = await docStore.deleteProjectDoc(id)
+
+    // delete from graph store (irreversible; so the last item to be removed)
+    await graphStore.deleteRepository(id);
+
+    return
+  } catch (error) {
+    // if some database operation fails, then all the database operations preceding it should be made undone (hence the "writeCommands")
+    let undoError = "SUCCESS"
     try {
-      const projectName = req.params.projectName;
-      const owner = req.user;
-
-      // delete from graph store
-      await graphStore.deleteRepository(projectName);
-      // delete from list in document store (user)
-      let newProjectList = owner.projects.filter((project) => {
-        return project !== projectName;
-      });
-      owner.projects = newProjectList;
-      await owner.save();
-      await Project.findByIdAndDelete(projectName)
-
-      resolve()
-    } catch (error) {
-      reject(error)
+      await undoDatabaseActions(writeCommands)
+    } catch (err) {
+      undoError = err.message
     }
-  })
+
+    throw new Error(`Failed to create Project with id ${id}; ${error.message}. Undoing past operations: ${undoError}`)
+  }
 };
 
 //////////////////////////// QUERY API ///////////////////////////////

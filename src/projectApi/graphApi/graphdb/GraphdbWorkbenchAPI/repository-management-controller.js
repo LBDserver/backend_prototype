@@ -63,6 +63,7 @@ async function createRepository(title, id) {
     };
 
     const response = await axios.post(url, formData, { headers });
+    console.info(`Created repository with id ${id}`)
     return(response.data);
   } catch (error) {
       throw new Error(`Failed creating repository; ${error.message}`)

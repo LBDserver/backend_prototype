@@ -35,7 +35,7 @@ async function pushProjectToCreator(id, creator) {
   }
 }
 
-async function removeProjectFromUser(id, user) {
+async function deleteProjectFromUser(id, user) {
   try {
     let newProjectList = user.projects.filter((project) => {
       return project !== id;
@@ -53,7 +53,7 @@ async function removeProjectFromUser(id, user) {
 async function findAllProjectDocuments() {
     try {
       const projects = await Project.find();
-      resolve(projects);
+      return(projects);
     } catch (error) {
       throw new Error(`Unable to find all project documents; ${error.message}`)
     }
@@ -213,6 +213,6 @@ module.exports = {
   deleteProjectDoc,
   createProjectDoc,
   pushProjectToCreator,
-  removeProjectFromUser,
+  deleteProjectFromUser,
   findAllProjectDocuments,
 };
