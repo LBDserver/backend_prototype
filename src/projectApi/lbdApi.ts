@@ -4,8 +4,21 @@ import { File, Project } from './documentApi/mongodb/models'
 import * as errorHandler from '../util/errorHandler'
 import { v4 } from "uuid"
 import { adaptQuery, queryPermissions } from "../authApi/authorisation/basicPermissions"
-import { IReturnProject } from '../interfaces/projectInterface'
 import undoDatabaseActions from '../util/databaseCleanup'
+import {
+  ICreateProject,
+  IReturnProject ,
+  IUploadResourceRequest,
+  IReturnResource
+} from '../interfaces/projectInterface'
+import {
+  IUser,
+  IRegisterRequest,
+  ILoginRequest,
+  IReturnUser,
+  IAuthRequest
+} from '../interfaces/userInterface'
+
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -277,22 +290,21 @@ async function updateNamedGraph(req) {
 };
 
 //////////////////////////// document API ///////////////////////////////
-async function uploadDocumentToProject(req, res) {
+async function uploadDocumentToProject(req): Promise<IReturnResource> {
   try {
     const projectName = req.params.projectName;
     const owner = req.user.uri;
-    const data = req.files.file[0].buffer;
-
+    console.log('req.files', req.files)
+    const data = req.files.resource[0].buffer;
+    console.log('data', data)
     // upload document
-    const documentUrl = await docStore.uploadDocuments(
+    const documentUrl = await docStore.uploadDocument(
       projectName,
       data,
       owner
     );
 
-    // upload document metadata to the graph store
-    const acl = await setAcl(req);
-
+    
     let label, description;
     if (req.body.description) {
       description = req.body.description;
@@ -301,47 +313,43 @@ async function uploadDocumentToProject(req, res) {
       label = req.body.label;
     }
 
+    // upload document metadata to the graph store
+    const acl = await setAcl(req);
     const metaContext = await setMetaGraph(projectName, documentUrl, acl, label, description);
 
-    return res.status(201).json({ url: documentUrl, metaGraph: metaContext });
+    return { uri: documentUrl, metadata: metaContext };
   } catch (error) {
-    const { reason, status } = errorHandler(error);
-    return res.status(status).send({ error: reason });
+    throw new Error(`Error uploading file; ${error.message}`)
   }
 };
 
-async function getDocumentFromProject(req, res) {
+async function getDocumentFromProject(req): Promise<IReturnResource> {
+  const projectName = req.params.projectName;
+  const fileId = req.params.fileId;
+  const uri = `${process.env.DOMAIN_URL}${req.originalUrl}`;
   try {
-    // only access docdb
-    const projectName = req.params.projectName;
-    const fileId = req.params.fileId;
-    const url = `${process.env.DOMAIN_URL}${req.originalUrl}`;
-    if (req.query.onlyPermissions) {
-      return res.status(200).send({ permissions: Array.from(req.permissions) });
-    } else if (!url.endsWith(".meta")) {
-      const file = await docStore.getDocument(projectName, fileId);
-
-      return res.status(200).send(file.main);
+    if (!uri.endsWith(".meta")) {
+      const data = await docStore.getDocument(projectName, fileId);
+      const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", "turtle")
+      return {uri, metadata, data: data.main.data}
     } else {
-      const results = await getFileMeta(req, res);
-      return res.status(200).json({ ...results, permissions: Array.from(req.permissions) });
+      const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", "turtle")
+      return {uri, metadata};
     }
   } catch (error) {
-    const { reason, status } = errorHandler(error);
-    return res.status(status).send({ error: reason });
+    throw new Error(`Unable to get document with uri ${uri}; ${error.message}`)
   }
 };
 
-async function deleteDocumentFromProject(req, res) {
+async function deleteDocumentFromProject(req): Promise<void> {
   try {
     const docUrl = await docStore.deleteDocument(req.params.fileId);
     const projectName = req.params.projectName;
     await graphStore.deleteNamedGraph(docUrl + ".meta", projectName, "");
 
-    return res.status(200).send({ message: "Document deleted" });
+    return
   } catch (error) {
-    const { reason, status } = errorHandler(error);
-    return res.status(status).send({ error: reason });
+    throw new Error(`Unable to delete document; ${error.message}`)
   }
 };
 
@@ -389,7 +397,7 @@ async function createNamedGraph(req, res) {
   }
 };
 
-async function getFileMeta(req, res) {
+async function getFileMeta(req) {
   try {
     const projectName = req.params.projectName;
     const fileId = req.params.fileId;
@@ -419,11 +427,7 @@ async function getFileMeta(req, res) {
       return { graph };
     }
   } catch (error) {
-    if (error.reason) {
-      return res.status(error.status).send({ error: error.reason });
-    } else {
-      return res.status(500).send({ error: error.message });
-    }
+    throw new Error(`Error finding metadata; ${error.message}`)
   }
 };
 
@@ -531,11 +535,7 @@ async function setAcl(req) {
         );
         acl = req.body.acl;
       } catch (error) {
-        throw {
-          reason:
-            "The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files",
-          status: 400,
-        };
+        throw new Error("The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files");
       }
     }
 
@@ -596,8 +596,7 @@ async function setMetaGraph(projectName, uri, acl, label, description) {
     };
 
     await graphStore.createNamedGraph(projectName, graphMeta, "");
-    console.log("created metadata graph with context", graphMeta.context);
-    return (graphMetaData);
+    return graphMetaData;
   } catch (error) {
     throw new Error(`Could not create metadata graph with context ${uri}; ${error.message}`)
   }

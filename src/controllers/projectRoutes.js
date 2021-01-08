@@ -37,7 +37,6 @@ router.post('/', authenticate, createProject) // create a project repository and
 router.get('/public', getPublicProjects) // get project metadata
 
 router.get('/:projectName', authenticate, checkAccess, getOneProject) // get project metadata
-router.get('/:projectName', authenticate, checkAccess, getOneProject) // get project metadata
 router.get('/:projectName/query', authenticate, checkAccess, queryProject) // only SPARQL select queries. Named graphs can be indicated
 // router.post('/:projectName/query', authenticate, checkAccess, queryProject) // all SPARQL queries. Named graphs can be indicated
 

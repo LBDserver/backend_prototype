@@ -98,7 +98,7 @@ async function findAllProjectDocuments() {
 //     })
 // }
 
-async function uploadDocuments (id, data) {
+async function uploadDocument (id, data) {
     try {
       const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
       const fileId = v4();
@@ -207,7 +207,7 @@ async function getDocument (id, fileId) {
 // }
 
 module.exports = {
-  uploadDocuments,
+  uploadDocument,
   deleteDocument,
   getDocument,
   deleteProjectDoc,

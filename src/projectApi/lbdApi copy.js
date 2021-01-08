@@ -285,7 +285,7 @@ uploadDocumentToProject = async (req, res) => {
     const data = req.files.file[0].buffer;
 
     // upload document
-    const documentUrl = await docStore.uploadDocuments(
+    const documentUrl = await docStore.uploadDocument(
       projectName,
       data,
       owner

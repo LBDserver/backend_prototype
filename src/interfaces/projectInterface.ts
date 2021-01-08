@@ -27,7 +27,20 @@ interface IResourceObject {
     [x: string]: string
 }
 
+interface IUploadResourceRequest extends express.Request {
+    resource?: Buffer
+}
+
+interface IReturnResource {
+    uri: string,
+    metadata?: string,
+    data?: Buffer
+}
+
+
 export {
     ICreateProject,
-    IReturnProject 
+    IReturnProject ,
+    IUploadResourceRequest,
+    IReturnResource
 }
