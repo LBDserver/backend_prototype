@@ -58,7 +58,8 @@ const models: TsoaRoute.Models = {
         "properties": {
             "uri": {"dataType":"string","required":true},
             "metadata": {"dataType":"string"},
-            "data": {"dataType":"buffer"},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"buffer"},{"dataType":"string"}]},
+            "results": {"ref":"IQueryResults"},
         },
         "additionalProperties": false,
     },
@@ -325,7 +326,8 @@ export function RegisterRoutes(app: express.Router) {
         app.post('/lbd/:projectName/graphs',
             function (request: any, response: any, next: any) {
             const args = {
-                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
             };
 

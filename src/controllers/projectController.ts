@@ -7,10 +7,6 @@ import {
     IReturnResource
 } from '../interfaces/projectInterface'
 import {
-    IUser,
-    IRegisterRequest,
-    ILoginRequest,
-    IReturnUser,
     IAuthRequest
 } from '../interfaces/userInterface'
 import * as api from '../projectApi'
@@ -170,11 +166,11 @@ export class ProjectController extends Controller {
         @Path() graphId: string,
         @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>
-    ): Promise<IReturnProject[]> {
+    ): Promise<IReturnResource> {
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
-            const response = await api.getOneProject(authReq)
+            const response = await api.getNamedGraph(authReq)
             this.setStatus(200)
             return response
         } catch (error) {
@@ -185,18 +181,16 @@ export class ProjectController extends Controller {
 
     @Post('/{projectName}/graphs/')
     public async createNewGraph(
-        @Request() request: express.Request,
-        // @Body() body: IUploadResourceBody,
+        @Path() projectName: string,
+        @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>
-    ): Promise<void> {
+    ): Promise<IReturnResource> {
         try {
-            // await multer().fields([{name: 'resource'}, {name: 'acl'}])
-            await this.handleFile(request)
-            console.log('req.resource', request["resource"])
-            // const authReq: IAuthRequest = await authenticate(req)
-            // const response = await api.createProject(authReq)
+            await this.handleFile(req)
+            const authReq: IAuthRequest = await authenticate(req)
+            const response: IReturnResource = await api.createNamedGraph(authReq)
             this.setStatus(201)
-            return 
+            return response
         } catch (error) {
             console.error('error', error)
             serverErrorResponse(500, { reason: error.message })
@@ -211,7 +205,7 @@ export class ProjectController extends Controller {
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
-            await api.deleteProject(authReq)
+            await api.deleteNamedGraph(authReq)
             this.setStatus(200)
             return
         } catch (error) {

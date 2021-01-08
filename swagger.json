@@ -86,8 +86,18 @@
 						"type": "string"
 					},
 					"data": {
-						"type": "string",
-						"format": "byte"
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "byte"
+							},
+							{
+								"type": "string"
+							}
+						]
+					},
+					"results": {
+						"$ref": "#/components/schemas/IQueryResults"
 					}
 				},
 				"required": [
@@ -547,10 +557,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/IReturnProject"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/IReturnResource"
 								}
 							}
 						}
@@ -627,8 +634,15 @@
 			"post": {
 				"operationId": "CreateNewGraph",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IReturnResource"
+								}
+							}
+						}
 					},
 					"500": {
 						"description": "",
@@ -650,7 +664,16 @@
 					}
 				},
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectName",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/register": {

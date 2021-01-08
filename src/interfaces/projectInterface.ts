@@ -6,7 +6,6 @@ interface ICreateProject {
     open: boolean
 }
 
-
 // change graphs and documents to objects with specific fields (metadata)
 // maybe also permissions field
 interface IReturnProject {
@@ -34,7 +33,8 @@ interface IUploadResourceRequest extends express.Request {
 interface IReturnResource {
     uri: string,
     metadata?: string,
-    data?: Buffer
+    data?: Buffer | string,
+    results?: IQueryResults
 }
 
 
@@ -42,5 +42,6 @@ export {
     ICreateProject,
     IReturnProject ,
     IUploadResourceRequest,
-    IReturnResource
+    IReturnResource,
+    IQueryResults,
 }
