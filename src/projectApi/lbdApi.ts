@@ -1,8 +1,8 @@
 import * as graphStore from './graphApi/graphdb'
 import * as docStore from './documentApi/mongodb'
 import { File, Project } from './documentApi/mongodb/models'
-import * as errorHandler from '../util/errorHandler'
 import { v4 } from "uuid"
+import {parse} from "@frogcat/ttl2jsonld"
 import { adaptQuery, queryPermissions } from "../authApi/authorisation/basicPermissions"
 import undoDatabaseActions from '../util/databaseCleanup'
 import {
@@ -19,7 +19,7 @@ import {
   IReturnUser,
   IAuthRequest
 } from '../interfaces/userInterface'
-
+import * as express from 'express'
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -116,11 +116,14 @@ async function createDefaultAclGraph(id, creator, aclUrl, open): Promise<string>
 };
 
 // send back all projects OWNED by the user (user profile from doc store)
-async function getAllProjects(req): Promise<IReturnProject[]> {
+async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
+  const mimeType = req.headers.accept || "application/ld+json"
+  console.log(req.headers.accept)
+  
   try {
     const projects = []
     for (const project of req.user.projects) {
-      const data = await findProjectData(project)
+      const data = await findProjectData(project, mimeType)
       projects.push(data)
     }
     return (projects);
@@ -129,14 +132,16 @@ async function getAllProjects(req): Promise<IReturnProject[]> {
   }
 };
 
-async function getPublicProjects(): Promise<IReturnProject[]> {
+async function getPublicProjects(req): Promise<IReturnProject[]> {
   try {
+    const mimeType = req.headers.accept || "application/ld+json"
+    console.log('req.headers.accept', req.headers.accept)
     const publicProjects = []
     const projects = await docStore.findAllProjectDocuments()
     for (const project of projects) {
       const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
       if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
-        const projectData = await findProjectData(project._id)
+        const projectData = await findProjectData(project._id, mimeType)
         publicProjects.push(projectData)
       }
     }
@@ -151,7 +156,8 @@ async function getPublicProjects(): Promise<IReturnProject[]> {
 async function getOneProject(req): Promise<IReturnProject> {
   try {
     const projectName = req.params.projectName;
-    const projectData = await findProjectData(projectName)
+    const mimeType = req.headers.accept || "application/ld+json"
+    const projectData = await findProjectData(projectName, mimeType)
     const permissions: string[] = Array.from(req.permissions)
     const project: IReturnProject = {
       ...projectData,
@@ -168,26 +174,28 @@ async function getOneProject(req): Promise<IReturnProject> {
   }
 };
 
-async function findProjectData(projectName): Promise<IReturnProject> {
+async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
   try {
     const projectGraph = await graphStore.getNamedGraph(
       `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
       projectName,
       "",
-      "turtle"
+      mimeType
     );
+    console.log('projectGraph', projectGraph)
     const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
     const files = await File.find({
       project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
     });
     let documents = {};
     for (const file of files) {
-      documents[file.url] = await graphStore.getNamedGraph(
+      const data = await graphStore.getNamedGraph(
         `${file.url}.meta`,
         projectName,
         "",
-        "turtle"
+        mimeType
       );
+      documents[file.url] = data
     }
 
     let graphs = {};
@@ -196,12 +204,13 @@ async function findProjectData(projectName): Promise<IReturnProject> {
         !result.contextID.value.endsWith("acl") &&
         !result.contextID.value.endsWith("meta")
       ) {
-        graphs[result.contextID.value] = await graphStore.getNamedGraph(
+        const data = await graphStore.getNamedGraph(
           `${result.contextID.value}.meta`,
           projectName,
           "",
-          "turtle"
-        );;
+          mimeType
+        );
+        graphs[result.contextID.value] = data
       }
     }
 
@@ -278,7 +287,7 @@ async function queryProject(req): Promise<IQueryResults> {
   }
 };
 
-async function updateNamedGraph(req): Promise<void> {
+async function updateProject(req): Promise<void> {
   try {
     console.log('req.query.update', req.query.update)
     const update = encodeURIComponent(req.query.update)
@@ -328,13 +337,14 @@ async function getDocumentFromProject(req): Promise<IReturnResource> {
   const projectName = req.params.projectName;
   const fileId = req.params.fileId;
   const uri = `${process.env.DOMAIN_URL}${req.originalUrl}`;
+  const mimeType = req.headers.accept || "application/ld+json"
   try {
     if (!uri.endsWith(".meta")) {
       const data = await docStore.getDocument(projectName, fileId);
-      const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", "turtle")
+      const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", mimeType)
       return {uri, metadata, data: data.main.data}
     } else {
-      const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", "turtle")
+      const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", mimeType)
       return {uri, metadata};
     }
   } catch (error) {
@@ -390,26 +400,17 @@ async function getFileMeta(req) {
   try {
     const projectName = req.params.projectName;
     const fileId = req.params.fileId;
-
+    const mimeType = req.headers.accept || "application/ld+json"
     const namedGraph =
       process.env.DOMAIN_URL + "/lbd/" + projectName + "/files/" + fileId;
 
     if (req.query.query) {
-      console.log("req.query.query", req.query.query);
       const newQuery = await adaptQuery(req.query.query, [namedGraph]);
-      console.log("newQuery", newQuery);
       const results = await graphStore.queryRepository(projectName, newQuery);
 
       return { query: newQuery, results };
     } else {
-      console.log("namedGraph", namedGraph);
-      const graph = await graphStore.getNamedGraph(
-        namedGraph,
-        projectName,
-        "",
-        "turtle"
-      );
-      console.log("graph", graph);
+      const graph = await graphStore.getNamedGraph(namedGraph,projectName,"",mimeType);
       if (!(graph.length > 0)) {
         throw { reason: "Graph not found", status: 404 };
       }
@@ -424,7 +425,7 @@ async function getNamedGraph(req): Promise<IReturnResource> {
   const projectName = req.params.projectName;
   const graphId = req.params.graphId;
   const namedGraph = process.env.DOMAIN_URL + "/lbd/" + projectName + "/graphs/" + graphId;
-
+  const mimeType = req.headers.accept || 'application/ld+json'
   try {
     if (req.query.query) {
       const newQuery = await adaptQuery(req.query.query, [namedGraph]);
@@ -432,8 +433,8 @@ async function getNamedGraph(req): Promise<IReturnResource> {
       return { uri: namedGraph, results }
     } else {
       console.log("getting graph")
-      const data = await graphStore.getNamedGraph(namedGraph,projectName,"","turtle");
-      const metadata = await graphStore.getNamedGraph(`${namedGraph}.meta`,projectName,"","turtle");
+      const data = await graphStore.getNamedGraph(namedGraph,projectName,"",mimeType);
+      const metadata = await graphStore.getNamedGraph(`${namedGraph}.meta`,projectName,"",mimeType);
       if (!(data.length > 0)) {
         throw new Error(`Graph ${namedGraph} not found.`);
       }
@@ -465,7 +466,7 @@ async function setAcl(req): Promise<string> {
   try {
     let acl, customAcl
     const projectName = req.params.projectName;
-
+    const mimeType = req.headers.accept || "application/ld+json"
     // default: if not specified, the main project acl is chosen
     if (!req.body.acl && !req.files.acl) {
       acl = `https://lbdserver.org/lbd/${projectName}/.acl`;
@@ -491,12 +492,7 @@ async function setAcl(req): Promise<string> {
       acl = aclData.context;
     } else {
       try {
-        await graphStore.getNamedGraph(
-          req.body.acl,
-          projectName,
-          "",
-          "turtle"
-        );
+        await graphStore.getNamedGraph(req.body.acl,projectName,"",mimeType);
         acl = req.body.acl;
       } catch (error) {
         throw new Error("The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files");
@@ -576,7 +572,7 @@ export {
   uploadDocumentToProject,
   deleteDocumentFromProject,
 
-  updateNamedGraph,
+  updateProject,
   getNamedGraph,
   createNamedGraph,
   deleteNamedGraph,

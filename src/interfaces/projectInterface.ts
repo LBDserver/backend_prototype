@@ -19,7 +19,18 @@ interface IReturnProject {
 }
 
 interface IQueryResults {
-    [key: string]: any[]
+    head: {
+        vars: string[]
+    },
+    results: {
+        bindings: {
+            [variable: string]: {
+                type: string,
+                value: string
+            }[]
+        }
+    }
+
 }
 
 interface IResourceObject {
@@ -37,11 +48,10 @@ interface IReturnResource {
     results?: IQueryResults
 }
 
-
 export {
     ICreateProject,
     IReturnProject ,
     IUploadResourceRequest,
     IReturnResource,
-    IQueryResults,
+    IQueryResults
 }

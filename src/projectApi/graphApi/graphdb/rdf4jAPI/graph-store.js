@@ -3,6 +3,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 const errorHandlerAxios = require("../../../../util/errorHandlerAxios");
 const btoa = require("btoa-lite");
+const parse = require("@frogcat/ttl2jsonld").parse
 
 async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
   try {
@@ -32,17 +33,18 @@ async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
 
 async function getNamedGraph(namedGraph, repositoryId, token, format) {
   try {
-    const mimeTypes = {
-      turtle: "text/turtle",
-    };
+    // const mimeTypes = {
+    //   turtle: "text/turtle",
+    //   jsonld: "application/ld+json"
+    // };
 
-    const mimeType = mimeTypes[format];
+    // const mimeType = mimeTypes[format];
 
     var options = {
       method: "GET",
       url: `${process.env.GRAPHDB_URL}/repositories/${repositoryId}/rdf-graphs/service?graph=${namedGraph}\n`,
       headers: {
-        Accept: `${mimeType}`,
+        Accept: `text/turtle`,
         Authorization: `Basic ${btoa(
           process.env.GDB_ADMIN + ":" + process.env.GDB_ADMIN_PW
         )}`,
@@ -50,7 +52,11 @@ async function getNamedGraph(namedGraph, repositoryId, token, format) {
     };
 
     const response = await axios(options);
-    return response.data;
+    if (format === "text/turtle") {
+      return response.data
+    } else {
+      return parse(response.data)
+    }
   } catch (error) {
     throw new Error(
       `Error fetching named graph ${namedGraph}; ${error.message}`

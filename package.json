@@ -6,7 +6,9 @@
   "scripts": {
     "all": "concurrently \"npm:dev\" \"npm:generate\"",
     "dev": "env-cmd -f ./config/dev.env nodemon -x ts-node src/index.ts",
-    "generate": "tsoa routes && tsoa swagger"
+    "generate": "tsoa routes && tsoa swagger",
+    "routes": "tsoa routes",
+    "swagger": "tsoa swagger"
   },
   "keywords": [],
   "author": "",

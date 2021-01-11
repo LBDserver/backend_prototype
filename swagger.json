@@ -14,12 +14,58 @@
 				}
 			},
 			"IQueryResults": {
-				"properties": {},
+				"properties": {
+					"head": {
+						"properties": {
+							"vars": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"vars"
+						],
+						"type": "object"
+					},
+					"results": {
+						"properties": {
+							"bindings": {
+								"properties": {},
+								"additionalProperties": {
+									"items": {
+										"properties": {
+											"value": {
+												"type": "string"
+											},
+											"type": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"value",
+											"type"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"type": "object"
+							}
+						},
+						"required": [
+							"bindings"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"head",
+					"results"
+				],
 				"type": "object",
-				"additionalProperties": {
-					"items": {},
-					"type": "array"
-				}
+				"additionalProperties": false
 			},
 			"IReturnProject": {
 				"properties": {
@@ -228,8 +274,26 @@
 						}
 					}
 				},
+				"description": "Retrieves all the projects associated with the authenticated user. The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			},
 			"post": {
 				"operationId": "CreateProject",
@@ -263,8 +327,26 @@
 						}
 					}
 				},
+				"description": "Create a new project, with the fields \"title\", \"description\" and an optional \"open\". The title and description are registered within the project metadata (as rdfs:label and rdfs:comment), while the \"open\" parameter is used to create an initial Access Control graph (\"open\": true means that every agent has Read access to the project). Authentication is mandatory (default); the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
-				"parameters": [],
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -313,8 +395,18 @@
 						}
 					}
 				},
+				"description": "Retrieves the public (openly accessible) projects on the local LBDserver instance. These are, among others, projects that have been created with the property \"open\": true (and for which the ACL graph has not been modified to make it closed again). User authentication is NOT required.",
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/lbd/{projectName}": {
@@ -353,12 +445,91 @@
 						}
 					}
 				},
+				"description": "Get a specific project by its ID (i.e. using the project URL). The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).",
 				"security": [],
 				"parameters": [
 					{
 						"in": "path",
 						"name": "projectName",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "UpdateOneProject",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get a specific project by its ID (i.e. using the project URL). The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).",
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectName",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "update",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -390,12 +561,29 @@
 						}
 					}
 				},
+				"description": "Delete a project by its ID (i.e. using the project URL). Authentication is mandatory; the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
 				"parameters": [
 					{
 						"in": "path",
 						"name": "projectName",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -436,6 +624,7 @@
 						}
 					}
 				},
+				"description": "Get a project File by its ID (i.e. via the File URL). The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).",
 				"security": [],
 				"parameters": [
 					{
@@ -450,6 +639,14 @@
 						"in": "path",
 						"name": "fileId",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -481,6 +678,7 @@
 						}
 					}
 				},
+				"description": "Delete a project resource (non RDF) by its ID (i.e. using the project URL). Authentication is mandatory (default); the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
 				"parameters": [
 					{
@@ -495,6 +693,14 @@
 						"in": "path",
 						"name": "fileId",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -535,12 +741,21 @@
 						}
 					}
 				},
+				"description": "Upload a new document (non-RDF resource) to the LBDserver. A UUID is generated for the document, its full URI is {projectURI}/files/{fileID}. A metadata graph (RDF!) gets created at {projectURI}/files/{fileID}.meta. The file should be sent as FormData with, with fileName \"resource\". The \"label\" and the \"description\" (body: as strings) are stored in the metadata graph, as well as a reference to the Access Control graph that applies to the new resource. If no ACL is specified, the metadata points towards the default project ACL (which was created at project setup). When creating a new file, a user may choose to upload a specific ACL graph along with the file itself. The ACL graph then is a FormData file identified by the fileName \"acl\". A final option is to point at an already existing ACL graph in the project, by including a (string) reference in the request body \"acl\". Note that there is currently no validation to check is an ACL graph is valid. Authentication is mandatory (default); the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
 				"parameters": [
 					{
 						"in": "path",
 						"name": "projectName",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -581,6 +796,7 @@
 						}
 					}
 				},
+				"description": "Get a project graph by its ID (i.e. via the graph URL). The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).",
 				"security": [],
 				"parameters": [
 					{
@@ -595,6 +811,30 @@
 						"in": "path",
 						"name": "graphId",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Accept",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "query",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -626,8 +866,18 @@
 						}
 					}
 				},
+				"description": "Delete a project resource (graph) by its ID (i.e. using the project URL). Authentication is mandatory (default); the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/lbd/{projectName}/graphs": {
@@ -663,12 +913,21 @@
 						}
 					}
 				},
+				"description": "Upload a new graph (RDF resource) to the LBDserver. A UUID is generated for the graph, its full URI is {projectURI}/graphs/{graphID}. A metadata graph (RDF) gets created at {projectURI}/graph/{graph}.meta. The graph should be sent as FormData with, with fileName \"resource\". The \"label\" and the \"description\" (body: as strings) are stored in the metadata graph, as well as a reference to the Access Control graph that applies to the new resource. If no ACL is specified, the metadata points towards the default project ACL (which was created at project setup). When creating a new file, a user may choose to upload a specific ACL graph along with the file itself. The ACL graph then is a FormData file identified by the fileName \"acl\". A final option is to point at an already existing ACL graph in the project, by including a (string) reference in the request body \"acl\". Note that there is currently no validation to check is an ACL graph is valid. Authentication is mandatory (default); the user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\".",
 				"security": [],
 				"parameters": [
 					{
 						"in": "path",
 						"name": "projectName",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}
@@ -723,8 +982,18 @@
 						}
 					}
 				},
+				"description": "Register as a local user on the LBDserver. The body of the request contains a \"username\" field (used to create a WebID that can be used for Access Control purposes), an \"email\" field and a \"password\".",
 				"security": [],
-				"parameters": [],
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -785,7 +1054,16 @@
 					}
 				},
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/logout": {
@@ -815,7 +1093,16 @@
 					}
 				},
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},

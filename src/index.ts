@@ -19,6 +19,9 @@ server.on('listening', async () => {
     mongoose.connection.on('error', (err: any) => {
         console.error(err)
     })
+
+
+    
 })
 
 // process.on('warning', (warning) => {

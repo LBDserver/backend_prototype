@@ -1,4 +1,4 @@
-import { Controller, Example, Post, Route, SuccessResponse, TsoaResponse, Res, Body, Request } from 'tsoa'
+import { Controller, Example, Post, Route, SuccessResponse, TsoaResponse, Res, Body, Request, Header } from 'tsoa'
 import { authenticate, createUser, loginUser, logoutUser } from '../authApi/userFunctions'
 import { IUser, IRegisterRequest, IReturnUser, IAuthRequest } from '../interfaces/userInterface'
 import * as express from 'express'
@@ -16,13 +16,20 @@ const userExample = {
 
 @Route('/register')
 export class RegisterController extends Controller {
-    @Example<IReturnUser>(userExample)
 
+    /**
+     * Register as a local user on the LBDserver. The body of the request contains a "username" field (used to create a WebID that can be used for Access Control purposes), an "email" field and a "password". 
+     * @param req 
+     * @param body 
+     * @param serverErrorResponse 
+     */
+    @Example<IReturnUser>(userExample)
     @Post()
     public async register(
         @Request() req: express.Request,
         @Body() body: IRegisterRequest,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Header("Authorization") authorization?: string
     ) : Promise<IReturnUser> {
         try {
             const response = await createUser(req)
@@ -35,6 +42,9 @@ export class RegisterController extends Controller {
     }
 }
 
+/**
+ * Login as an existing user on the local LBDserver. Login follows the Basic Auth protocol. The response is a token that should be used for authentication in all other LBDserver requests.
+ */
 @Route('/login')
 export class LoginController extends Controller {
     @Example<IReturnUser>(userExample)
@@ -43,7 +53,8 @@ export class LoginController extends Controller {
     @Post()
     public async login(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Header("Authorization") authorization?: string
     ) : Promise<IReturnUser> {
         try {
             const response = await loginUser(req)
@@ -55,6 +66,9 @@ export class LoginController extends Controller {
     }
 }
 
+/**
+ * Log out as a user. The user is authenticated via a Bearer token sent along with the request as a header "Authorization: Bearer {token}". The token associated with the session is removed and can no longer be used for authentication. 
+ */
 @Route('/logout')
 export class LogoutController extends Controller {
     @Example<void>(undefined)
@@ -62,7 +76,8 @@ export class LogoutController extends Controller {
     @Post()
     public async login(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Header("Authorization") authorization?: string
     ) : Promise<void> {
         try {
             const authReq: IAuthRequest = await authenticate(req)

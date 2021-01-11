@@ -25,8 +25,10 @@ const models: TsoaRoute.Models = {
     "IQueryResults": {
         "dataType": "refObject",
         "properties": {
+            "head": {"dataType":"nestedObjectLiteral","nestedProperties":{"vars":{"dataType":"array","array":{"dataType":"string"},"required":true}},"required":true},
+            "results": {"dataType":"nestedObjectLiteral","nestedProperties":{"bindings":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"value":{"dataType":"string","required":true},"type":{"dataType":"string","required":true}}}},"required":true}},"required":true},
         },
-        "additionalProperties": {"dataType":"array","array":{"dataType":"any"}},
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "IReturnProject": {
@@ -111,6 +113,8 @@ export function RegisterRoutes(app: express.Router) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -134,6 +138,7 @@ export function RegisterRoutes(app: express.Router) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -158,6 +163,9 @@ export function RegisterRoutes(app: express.Router) {
                     projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
+                    query: {"in":"query","name":"query","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -176,12 +184,40 @@ export function RegisterRoutes(app: express.Router) {
             promiseHandler(controller, promise, response, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.put('/lbd/:projectName',
+            function (request: any, response: any, next: any) {
+            const args = {
+                    projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    update: {"in":"query","name":"update","required":true,"dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new ProjectController();
+
+
+            const promise = controller.updateOneProject.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/lbd',
             function (request: any, response: any, next: any) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     body: {"in":"body","name":"body","required":true,"ref":"ICreateProject"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -206,6 +242,8 @@ export function RegisterRoutes(app: express.Router) {
                     projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -231,6 +269,7 @@ export function RegisterRoutes(app: express.Router) {
                     fileId: {"in":"path","name":"fileId","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -255,6 +294,7 @@ export function RegisterRoutes(app: express.Router) {
                     projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -280,6 +320,7 @@ export function RegisterRoutes(app: express.Router) {
                     fileId: {"in":"path","name":"fileId","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -305,6 +346,9 @@ export function RegisterRoutes(app: express.Router) {
                     graphId: {"in":"path","name":"graphId","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    mimeType: {"in":"header","name":"Accept","dataType":"string"},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
+                    query: {"in":"query","name":"query","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -329,6 +373,7 @@ export function RegisterRoutes(app: express.Router) {
                     projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -352,6 +397,7 @@ export function RegisterRoutes(app: express.Router) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -376,6 +422,7 @@ export function RegisterRoutes(app: express.Router) {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     body: {"in":"body","name":"body","required":true,"ref":"IRegisterRequest"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -399,6 +446,7 @@ export function RegisterRoutes(app: express.Router) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -422,6 +470,7 @@ export function RegisterRoutes(app: express.Router) {
             const args = {
                     req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
