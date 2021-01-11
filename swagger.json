@@ -9,9 +9,7 @@
 			"IResourceObject": {
 				"properties": {},
 				"type": "object",
-				"additionalProperties": {
-					"type": "string"
-				}
+				"additionalProperties": false
 			},
 			"IQueryResults": {
 				"properties": {
@@ -33,22 +31,7 @@
 						"properties": {
 							"bindings": {
 								"properties": {},
-								"additionalProperties": {
-									"items": {
-										"properties": {
-											"value": {
-												"type": "string"
-											},
-											"type": {
-												"type": "string"
-											}
-										},
-										"required": [
-											"value",
-											"type"
-										],
-										"type": "object"
-									},
+								"additionalProperties": false,
 									"type": "array"
 								},
 								"type": "object"
