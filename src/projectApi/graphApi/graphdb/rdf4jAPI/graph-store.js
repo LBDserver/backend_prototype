@@ -25,9 +25,10 @@ async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
     console.info(`Created named graph ${context}`)
     return response.data;
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Failed to create named graph ${context}; ${error.message}`
     );
+    throw error
   }
 }
 
@@ -58,9 +59,10 @@ async function getNamedGraph(namedGraph, repositoryId, token, format) {
       return parse(response.data)
     }
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Error fetching named graph ${namedGraph}; ${error.message}`
     );
+    throw error
   }
 }
 
@@ -79,9 +81,10 @@ async function deleteNamedGraph(namedGraph, repositoryId, token) {
     const response = await axios.post(url, formData, { headers });
     return response.data;
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Failed to delete named graph ${namedGraph}; ${error.message}`
     );
+    throw error
   }
 }
 
@@ -99,7 +102,8 @@ async function getAllNamedGraphs(repositoryId, token) {
     const response = await axios(options);
     return response.data;
   } catch (error) {
-    throw new Error(`Error fetching  all named Graphs; ${error.message}`);
+    error.message = (`Error fetching  all named Graphs; ${error.message}`);
+    throw error
   }
 }
 

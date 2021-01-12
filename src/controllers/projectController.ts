@@ -25,7 +25,7 @@ export class ProjectController extends Controller {
     @Get()
     public async getAllProjects(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string
     ): Promise<IReturnProject[]> {
@@ -37,7 +37,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -49,7 +49,7 @@ export class ProjectController extends Controller {
     @Get('/public')
     public async getPublicProjects(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string
     ): Promise<IReturnProject[]> {
         try {
@@ -58,7 +58,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -72,7 +72,7 @@ export class ProjectController extends Controller {
     public async getOneProject(
         @Path() projectName: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string,
         @Query() query?: string
@@ -85,7 +85,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -99,7 +99,7 @@ export class ProjectController extends Controller {
     public async updateOneProject(
         @Path() projectName: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Query() update: string,
         @Header("Authorization") authorization?: string,
     ): Promise<void> {
@@ -111,7 +111,7 @@ export class ProjectController extends Controller {
             return
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -125,7 +125,7 @@ export class ProjectController extends Controller {
     public async createProject(
         @Request() req: express.Request,
         @Body() body: ICreateProject,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string
     ): Promise<IReturnProject> {
@@ -136,7 +136,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -150,7 +150,7 @@ export class ProjectController extends Controller {
     public async deleteProject(
         @Path() projectName: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string
     ): Promise<void> {
@@ -162,7 +162,7 @@ export class ProjectController extends Controller {
             return
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -179,7 +179,7 @@ export class ProjectController extends Controller {
         @Path() projectName: string,
         @Path() fileId: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ): Promise<IReturnResource> {
         try {
@@ -190,7 +190,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -204,7 +204,7 @@ export class ProjectController extends Controller {
     public async createNewFile(
         @Path() projectName: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ): Promise<IReturnResource> {
         try {
@@ -215,7 +215,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -231,7 +231,7 @@ export class ProjectController extends Controller {
         @Path() projectName: string,
         @Path() fileId: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ): Promise<void> {
         try {
@@ -242,7 +242,7 @@ export class ProjectController extends Controller {
             return
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -259,7 +259,7 @@ export class ProjectController extends Controller {
         @Path() projectName: string,
         @Path() graphId: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string,
         @Query() query?: string
@@ -272,7 +272,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -286,7 +286,7 @@ export class ProjectController extends Controller {
     public async createNewGraph(
         @Path() projectName: string,
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ): Promise<IReturnResource> {
         try {
@@ -297,7 +297,7 @@ export class ProjectController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 
@@ -309,7 +309,7 @@ export class ProjectController extends Controller {
     @Delete('/{projectName}/graphs/{graphId}')
     public async deleteOneGraph(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ): Promise<void> {
         try {
@@ -320,7 +320,7 @@ export class ProjectController extends Controller {
             return
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 

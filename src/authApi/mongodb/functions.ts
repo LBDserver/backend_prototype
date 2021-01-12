@@ -11,7 +11,8 @@ async function register(props: IRegisterRequest): Promise<IReturnUser> {
         const token = await user.generateAuthToken()
         return { user, token }
     } catch (error) {
-        throw new Error(`Unable to register user; ${error.message}`)
+        error.message = `Unable to register user; ${error.message}`
+        throw error
     }
 }
 
@@ -21,7 +22,8 @@ async function login(props: ILoginRequest): Promise<IReturnUser> {
         const token = await user.generateAuthToken()
         return { user, token }
     } catch (error) {
-        throw new Error(`Unable to login user; ${error.message}`)
+        error.message = (`Unable to login user; ${error.message}`)
+        throw error
     }
 }
 
@@ -45,7 +47,9 @@ async function authenticate(req: express.Request): Promise<IAuthRequest> {
             return authReq
         }
     } catch (error) {
-        throw new Error(`Unable to authenticate; ${error.message}`)
+        error.message = (`Unable to authenticate; ${error.message}`)
+        throw error
+
     }
 }
 
@@ -56,7 +60,8 @@ async function logout(req: IAuthRequest): Promise<void> {
         })
         await req.user.save()
     } catch (error) {
-        throw new Error(`Unable to logout; ${error.message}`)
+        error.message = (`Unable to logout; ${error.message}`)
+        throw error
     }
 }
 

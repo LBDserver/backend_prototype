@@ -18,8 +18,7 @@ getUsers = async (username, token) => {
         const users = await axios(options)
         return users
     } catch (error) {
-        console.log('error', error)
-        throw new Error(error)
+        throw error
     }
 }
 
@@ -37,8 +36,7 @@ getUser = async (username, token) => {
         return user
 
     } catch (error) {
-        console.log('error', error)
-        throw new Error(error)
+        throw error
     }
 }
 
@@ -55,13 +53,13 @@ createUser = async (username, password, token) => {
         };
 
         request(options, function (error, response) {
-            if (error) throw new Error(error);
+            if (error) error.message = (error);
         });
         return
 
     } catch (error) {
         console.log('error', error)
-        throw new Error(error)
+        throw error
     }
 }
 
@@ -80,7 +78,7 @@ deleteUser = async (username, token) => {
 
     } catch (error) {
         console.log('error', error)
-        throw new Error(error)
+        throw error
     }
 }
 
@@ -97,13 +95,13 @@ updateUser = async (username, password, body, token) => {
         };
 
         request(options, function (error, response) {
-            if (error) throw new Error(error);
+            if (error) error.message = (error);
         });
         return
 
     } catch (error) {
         console.log('error', error)
-        throw new Error(error)
+        throw error
     }
 }
 

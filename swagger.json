@@ -9,7 +9,9 @@
 			"IResourceObject": {
 				"properties": {},
 				"type": "object",
-				"additionalProperties": false
+				"additionalProperties": {
+					"type": "string"
+				}
 			},
 			"IQueryResults": {
 				"properties": {
@@ -31,7 +33,22 @@
 						"properties": {
 							"bindings": {
 								"properties": {},
-								"additionalProperties": false,
+								"additionalProperties": {
+									"items": {
+										"properties": {
+											"value": {
+												"type": "string"
+											},
+											"type": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"value",
+											"type"
+										],
+										"type": "object"
+									},
 									"type": "array"
 								},
 								"type": "object"
@@ -244,11 +261,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -297,11 +320,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -365,11 +394,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -415,11 +450,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -477,11 +518,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -531,11 +578,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -594,11 +647,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -648,11 +707,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -711,11 +776,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -766,11 +837,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -836,11 +913,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -883,11 +966,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -952,11 +1041,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -1023,11 +1118,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"
@@ -1062,11 +1163,17 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"reason": {
+										"message": {
 											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
 										}
 									},
 									"required": [
+										"message",
 										"reason"
 									],
 									"type": "object"

@@ -8,9 +8,10 @@ async function createProjectDoc(url, _id) {
     await project.save();
     return project;
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Unable to create project with id ${id} in the document store; ${error.message}`
     );
+    throw error
   }
 }
 
@@ -19,7 +20,8 @@ async function deleteProjectDoc(id) {
     await Project.findByIdAndDelete(id);
     return true;
   } catch (error) {
-    throw new Error(`Unable to delete project with id ${id}; ${error.message}`);
+    error.message = (`Unable to delete project with id ${id}; ${error.message}`);
+    throw error
   }
 }
 
@@ -29,9 +31,8 @@ async function pushProjectToCreator(id, creator) {
     await creator.save();
     return true
   } catch (error) {
-    throw new Error(
-      `Unable to push project with id ${id} to creator ${creator.uri}; ${error.message}`
-    );
+    error.message = `Unable to push project with id ${id} to creator ${creator.uri}; ${error.message}`
+    throw error
   }
 }
 
@@ -44,9 +45,8 @@ async function deleteProjectFromUser(id, user) {
     await user.save();
     return true;
   } catch (error) {
-    throw new Error(
-      `Unable to remove project with id ${id} from user ${user.uri}; ${error.message}`
-    );
+    error.message =`Unable to remove project with id ${id} from user ${user.uri}; ${error.message}`
+    throw error
   }
 }
 
@@ -55,7 +55,8 @@ async function findAllProjectDocuments() {
       const projects = await Project.find();
       return(projects);
     } catch (error) {
-      throw new Error(`Unable to find all project documents; ${error.message}`)
+      error.message = (`Unable to find all project documents; ${error.message}`)
+      throw error
     }
 }
 // ACL implemented
@@ -112,7 +113,8 @@ async function uploadDocument (id, data) {
       await file.save();
       return (file.url);
     } catch (error) {
-      throw new Error(`Unable to upload document; ${error.message}`)
+      error.message = (`Unable to upload document; ${error.message}`)
+      throw error
     }
 };
 
@@ -120,11 +122,12 @@ async function deleteDocument(id) {
     try {
       document = await File.findByIdAndDelete(id);
       if (!document) {
-        throw new Error();
+        throw new Error(`Document not found`);
       }
       return(document.url);
     } catch (error) {
-      throw new Error(`Unable to delete document with id ${id}; ${error.message}`)
+      error.message = (`Unable to delete document with id ${id}; ${error.message}`)
+      throw error
     }
 };
 
@@ -160,12 +163,13 @@ async function getDocument (id, fileId) {
       const file = await File.findOne({ _id: fileId, project: projectUrl });
 
       if (!file) {
-        reject({ status: 404, message: "File not found" });
+        throw new Error(`Document not found`)
       }
 
       return (file);
     } catch (error) {
-      throw new Error(`Unable to get document with id ${id}; ${error.message}`)
+      error.message = (`Unable to get document with id ${id}; ${error.message}`)
+      throw error
     }
 };
 

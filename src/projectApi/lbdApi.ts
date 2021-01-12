@@ -19,7 +19,6 @@ import {
   IReturnUser,
   IAuthRequest
 } from '../interfaces/userInterface'
-import * as express from 'express'
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -72,7 +71,8 @@ async function createProject(req): Promise<IReturnProject> {
       undoError = err.message
     }
 
-    throw new Error(`Failed to create Project; ${error.message}. Undoing past operations: ${undoError}`)
+    error.message = (`Failed to create Project; ${error.message}. Undoing past operations: ${undoError}`)
+    throw error
   }
 };
 
@@ -111,7 +111,8 @@ async function createDefaultAclGraph(id, creator, aclUrl, open): Promise<string>
     await graphStore.createNamedGraph(id, aclData, "");
     return data;
   } catch (error) {
-    throw new Error(`Failed creating the default ACL graph; ${error.message}`)
+    error.message = (`Failed creating the default ACL graph; ${error.message}`)
+    throw error
   }
 };
 
@@ -128,7 +129,8 @@ async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
     }
     return (projects);
   } catch (error) {
-    throw new Error(`Could not retrieve all projects; ${error.message}`)
+    error.message = (`Could not retrieve all projects; ${error.message}`)
+    throw error
   }
 };
 
@@ -148,7 +150,8 @@ async function getPublicProjects(req): Promise<IReturnProject[]> {
 
     return (publicProjects)
   } catch (error) {
-    throw new Error(`Could not get public projects; ${error.message}`)
+    error.message = (`Could not get public projects; ${error.message}`)
+    throw error
   }
 }
 
@@ -170,7 +173,8 @@ async function getOneProject(req): Promise<IReturnProject> {
 
     return project
   } catch (error) {
-    throw new Error(`Unable to get project; ${error.message}`)
+    error.message = (`Unable to get project; ${error.message}`)
+    throw error
   }
 };
 
@@ -221,7 +225,8 @@ async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
       id: projectName
     });
   } catch (error) {
-    throw new Error(`Could not find project data for project with id ${projectName}; ${error.message}`)
+    error.message = (`Could not find project data for project with id ${projectName}; ${error.message}`)
+    throw error
   }
 }
 
@@ -237,8 +242,6 @@ async function deleteProject(req): Promise<void> {
   }
 
   try {
-
-
     // delete from list in document store (user)
     let newProjectList = owner.projects.filter((project) => {
       return project !== id;
@@ -261,7 +264,8 @@ async function deleteProject(req): Promise<void> {
       undoError = err.message
     }
 
-    throw new Error(`Failed to create Project with id ${id}; ${error.message}. Undoing past operations: ${undoError}`)
+    error.message = (`Failed to create Project with id ${id}; ${error.message}. Undoing past operations: ${undoError}`)
+    throw error
   }
 };
 
@@ -280,10 +284,12 @@ async function queryProject(req): Promise<IQueryResults> {
         return (results);
       } else {
         throw new Error("This SPARQL query is not allowed in a GET request. Use POST for INSERT and DELETE queries")
+
       };
     }
   } catch (error) {
-    throw new Error(`Could not complete query; ${error.message}`)
+    error.message = (`Could not complete query; ${error.message}`)
+    throw error
   }
 };
 
@@ -295,7 +301,8 @@ async function updateProject(req): Promise<void> {
     await graphStore.updateRepositorySparql(projectName, update)
     return
   } catch (error) {
-    throw new Error(`Could not update named graph; ${error.message}`)
+    error.message = (`Could not update named graph; ${error.message}`)
+    throw error
   }
 };
 
@@ -329,7 +336,8 @@ async function uploadDocumentToProject(req): Promise<IReturnResource> {
 
     return { uri: documentUrl, metadata: metaContext };
   } catch (error) {
-    throw new Error(`Error uploading file; ${error.message}`)
+    error.message = (`Error uploading file; ${error.message}`)
+    throw error
   }
 };
 
@@ -348,7 +356,8 @@ async function getDocumentFromProject(req): Promise<IReturnResource> {
       return {uri, metadata};
     }
   } catch (error) {
-    throw new Error(`Unable to get document with uri ${uri}; ${error.message}`)
+    error.message = (`Unable to get document with uri ${uri}; ${error.message}`)
+    throw error
   }
 };
 
@@ -360,7 +369,8 @@ async function deleteDocumentFromProject(req): Promise<void> {
 
     return
   } catch (error) {
-    throw new Error(`Unable to delete document; ${error.message}`)
+    error.message = (`Unable to delete document; ${error.message}`)
+    throw error
   }
 };
 
@@ -392,7 +402,8 @@ async function createNamedGraph(req): Promise<IReturnResource> {
 
     return {uri, metadata};
   } catch (error) {
-    throw new Error(`Unable to create named graph; ${error.message}`)
+    error.message = (`Unable to create named graph; ${error.message}`)
+    throw error
   }
 };
 
@@ -412,12 +423,13 @@ async function getFileMeta(req) {
     } else {
       const graph = await graphStore.getNamedGraph(namedGraph,projectName,"",mimeType);
       if (!(graph.length > 0)) {
-        throw { reason: "Graph not found", status: 404 };
+        throw new Error('Graph not found')
       }
       return { graph };
     }
   } catch (error) {
-    throw new Error(`Error finding metadata; ${error.message}`)
+    error.message = (`Error finding metadata; ${error.message}`)
+    throw error
   }
 };
 
@@ -441,7 +453,8 @@ async function getNamedGraph(req): Promise<IReturnResource> {
       return {uri: namedGraph, data, metadata }
     }
   } catch (error) {
-    throw new Error(`Could not get graph ${namedGraph}; ${error.message}`)
+    error.message = (`Could not get graph ${namedGraph}; ${error.message}`)
+    throw error
   }
 };
 
@@ -457,7 +470,8 @@ async function deleteNamedGraph(req, res): Promise<void> {
 
     return
   } catch (error) {
-    throw new Error(`Unable to delete graph ${namedGraph}; ${error.message}`)
+    error.message = (`Unable to delete graph ${namedGraph}; ${error.message}`)
+    throw error
   }
 };
 
@@ -500,7 +514,8 @@ async function setAcl(req): Promise<string> {
     }
     return acl
   } catch (error) {
-    throw new Error(`Could not create ACL file; ${error.message}`)
+    error.message = (`Could not create ACL file; ${error.message}`)
+    throw error
   }
 };
 
@@ -532,7 +547,8 @@ async function setGraph(req, projectName, acl, context): Promise<void> {
     return;
 
   } catch (error) {
-    throw new Error(`Could not create graph with context ${context}; ${error.message}`)
+    error.message = (`Could not create graph with context ${context}; ${error.message}`)
+    throw error
   }
 };
 
@@ -557,7 +573,8 @@ async function setMetaGraph(projectName, uri, acl, label, description): Promise<
     await graphStore.createNamedGraph(projectName, graphMeta, "");
     return graphMetaData;
   } catch (error) {
-    throw new Error(`Could not create metadata graph with context ${uri}; ${error.message}`)
+    error.message = (`Could not create metadata graph with context ${uri}; ${error.message}`)
+    throw error
   }
 };
 

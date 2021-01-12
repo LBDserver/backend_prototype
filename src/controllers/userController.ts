@@ -28,7 +28,7 @@ export class RegisterController extends Controller {
     public async register(
         @Request() req: express.Request,
         @Body() body: IRegisterRequest,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ) : Promise<IReturnUser> {
         try {
@@ -37,7 +37,7 @@ export class RegisterController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: error.message })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 }
@@ -53,7 +53,7 @@ export class LoginController extends Controller {
     @Post()
     public async login(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ) : Promise<IReturnUser> {
         try {
@@ -61,7 +61,7 @@ export class LoginController extends Controller {
             return response
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: "Internal Server Error" })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 }
@@ -76,7 +76,7 @@ export class LogoutController extends Controller {
     @Post()
     public async login(
         @Request() req: express.Request,
-        @Res() serverErrorResponse: TsoaResponse<500, { reason: string }>,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
     ) : Promise<void> {
         try {
@@ -85,7 +85,7 @@ export class LogoutController extends Controller {
             await logoutUser(authReq)
         } catch (error) {
             console.error('error', error)
-            serverErrorResponse(500, { reason: "Internal Server Error" })
+            serverErrorResponse(500, {reason: error, message: error.message})
         }
     }
 }

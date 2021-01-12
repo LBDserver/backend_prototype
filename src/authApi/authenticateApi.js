@@ -33,7 +33,7 @@ authenticateAdmin = async (req, res, next) => {
       "tokens.token": token,
     });
     if (!user) {
-      throw new Error();
+      throw new Error(`User not found`)
     }
 
     if (user.email === "admin@lbdserver.org") {
@@ -41,7 +41,7 @@ authenticateAdmin = async (req, res, next) => {
       req.token = token;
       next();
     } else {
-      throw new Error();
+      throw new Error(`You are not allowed to use this route`)
     }
   } catch (error) {
     res

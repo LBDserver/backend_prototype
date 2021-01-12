@@ -21,9 +21,10 @@ async function queryRepository(id, query) {
     const results = await axios(options);
     return results.data;
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Unable to query repostory with id ${id}; ${error.message}`
     );
+    throw error
   }
 }
 
@@ -43,9 +44,10 @@ async function updateRepositorySparql(id, update) {
     response = await axios(options);
     return response.data;
   } catch (error) {
-    throw new Error(
+    error.message = (
       `Unable to update repository with id ${id}; ${error.message}`
     );
+    throw error
   }
 }
 

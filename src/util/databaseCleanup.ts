@@ -19,7 +19,8 @@ async function undoDatabaseActions(writeCommands: IWriteCommands) {
             }
         }
     } catch (error) {
-        throw new Error(`Unable to undo all the changes made previously; ${error.message}`)
+        error.message = (`Unable to undo all the changes made previously; ${error.message}`)
+        throw error
     }
 }
 

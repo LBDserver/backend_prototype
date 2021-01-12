@@ -24,7 +24,8 @@ async function getRepositories () {
       const response = await axios(options);
       return(response.data);
     } catch (error) {
-        throw new Error(`Failed to get repositories; ${error.message}`)
+        error.message = (`Failed to get repositories; ${error.message}`)
+        throw error
     }
 };
 
@@ -43,7 +44,8 @@ async function getRepository (id)  {
       const response = await axios(options);
       return(response.data);
     } catch (error) {
-        throw new Error(`Failed to get repository; ${error.message}`)
+        error.message = (`Failed to get repository; ${error.message}`)
+        throw error
     }
 };
 
@@ -66,7 +68,8 @@ async function createRepository(title, id) {
     console.info(`Created repository with id ${id}`)
     return(response.data);
   } catch (error) {
-      throw new Error(`Failed creating repository; ${error.message}`)
+      error.message = (`Failed creating repository; ${error.message}`)
+      throw error
   }
 }
 
@@ -85,7 +88,8 @@ async function deleteRepository(id) {
       const response = await axios(options);
       return(response.data);
     } catch (error) {
-        throw new Error(`Failed deleting repository; ${error.message}`)
+        error.message = (`Failed deleting repository; ${error.message}`)
+        throw error
     }
 };
 

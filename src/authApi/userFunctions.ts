@@ -40,7 +40,8 @@ async function authorize(req: IAuthRequest): Promise<IAuthRequest> {
 
         return req
     } catch (error) {
-        throw new Error(`Error checking access; ${error.message}`)
+        error.message = `Error checking access; ${error.message}`
+        throw error
     }
 }
 
@@ -51,7 +52,8 @@ function decryptAuth(base) {
         const [email, password] = Buffer.from(basic[1], 'base64').toString('ascii').split(':')
         return { email, password }
     } catch (error) {
-        throw new Error('Unable to decrypt the basic Auth header')
+        error.message = 'Unable to decrypt the basic Auth header'
+        throw error
     }
 }
 

@@ -508,7 +508,7 @@ setAcl = (req, context) => {
         console.log("custom acl detected");
 
         if (!req.files.aclName) {
-          throw new Error(
+          error.message = (
             "When uploading a custom acl file, please set a context URL for it"
           );
         }
