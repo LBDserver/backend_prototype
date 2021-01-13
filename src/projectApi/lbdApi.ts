@@ -2,15 +2,16 @@ import * as graphStore from './graphApi/graphdb'
 import * as docStore from './documentApi/mongodb'
 import { File, Project } from './documentApi/mongodb/models'
 import { v4 } from "uuid"
-import {parse} from "@frogcat/ttl2jsonld"
+import { parse } from "@frogcat/ttl2jsonld"
 import { adaptQuery, queryPermissions } from "../authApi/authorisation/basicPermissions"
 import undoDatabaseActions from '../util/databaseCleanup'
 import {
   ICreateProject,
-  IReturnProject ,
+  IReturnProject,
   IUploadResourceRequest,
-  IReturnResource,
-  IQueryResults
+  IReturnMetadata,
+  IQueryResults,
+  IReturnGraph
 } from '../interfaces/projectInterface'
 import {
   IUser,
@@ -57,9 +58,9 @@ async function createProject(req): Promise<IReturnProject> {
     return ({
       metadata: repoMetaData,
       id,
+      uri: repoUrl,
       graphs: {},
-      documents: {},
-      message: "Project successfully created",
+      documents: {}
     });
   } catch (error) {
 
@@ -120,7 +121,7 @@ async function createDefaultAclGraph(id, creator, aclUrl, open): Promise<string>
 async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
   const mimeType = req.headers.accept || "application/ld+json"
   console.log(req.headers.accept)
-  
+
   try {
     const projects = []
     for (const project of req.user.projects) {
@@ -307,7 +308,7 @@ async function updateProject(req): Promise<void> {
 };
 
 //////////////////////////// document API ///////////////////////////////
-async function uploadDocumentToProject(req): Promise<IReturnResource> {
+async function uploadDocumentToProject(req): Promise<IReturnMetadata> {
   try {
     const projectName = req.params.projectName;
     const owner = req.user.uri;
@@ -321,7 +322,7 @@ async function uploadDocumentToProject(req): Promise<IReturnResource> {
       owner
     );
 
-    
+
     let label, description;
     if (req.body.description) {
       description = req.body.description;
@@ -341,25 +342,34 @@ async function uploadDocumentToProject(req): Promise<IReturnResource> {
   }
 };
 
-async function getDocumentFromProject(req): Promise<IReturnResource> {
+async function getDocumentFromProject(req): Promise<Buffer> {
   const projectName = req.params.projectName;
   const fileId = req.params.fileId;
   const uri = `${process.env.DOMAIN_URL}${req.originalUrl}`;
   const mimeType = req.headers.accept || "application/ld+json"
   try {
-    if (!uri.endsWith(".meta")) {
-      const data = await docStore.getDocument(projectName, fileId);
-      const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", mimeType)
-      return {uri, metadata, data: data.main.data}
-    } else {
-      const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", mimeType)
-      return {uri, metadata};
-    }
+    const data = await docStore.getDocument(projectName, fileId);
+    const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", mimeType)
+    return data.main.buffer
   } catch (error) {
     error.message = (`Unable to get document with uri ${uri}; ${error.message}`)
     throw error
   }
 };
+
+async function getDocumentMetadata(req): Promise<IReturnMetadata> {
+  const projectName = req.params.projectName;
+  const uri = `${process.env.DOMAIN_URL}${req.originalUrl}`;
+  const mimeType = req.headers.accept || "application/ld+json"
+  try {
+    const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", mimeType)
+    return { uri, metadata };
+  } catch (error) {
+    error.message = (`Unable to get document with uri ${uri}; ${error.message}`)
+    throw error
+  }
+};
+
 
 async function deleteDocumentFromProject(req): Promise<void> {
   try {
@@ -375,7 +385,7 @@ async function deleteDocumentFromProject(req): Promise<void> {
 };
 
 //////////////////////////// NAMED GRAPHS API ///////////////////////////////
-async function createNamedGraph(req): Promise<IReturnResource> {
+async function createNamedGraph(req): Promise<IReturnMetadata> {
   try {
     const projectName = req.params.projectName;
     const id = v4()
@@ -400,40 +410,40 @@ async function createNamedGraph(req): Promise<IReturnResource> {
       description
     );
 
-    return {uri, metadata};
+    return { uri, metadata };
   } catch (error) {
     error.message = (`Unable to create named graph; ${error.message}`)
     throw error
   }
 };
 
-async function getFileMeta(req) {
-  try {
-    const projectName = req.params.projectName;
-    const fileId = req.params.fileId;
-    const mimeType = req.headers.accept || "application/ld+json"
-    const namedGraph =
-      process.env.DOMAIN_URL + "/lbd/" + projectName + "/files/" + fileId;
+// async function getFileMeta(req) {
+//   try {
+//     const projectName = req.params.projectName;
+//     const fileId = req.params.fileId;
+//     const mimeType = req.headers.accept || "application/ld+json"
+//     const namedGraph =
+//       process.env.DOMAIN_URL + "/lbd/" + projectName + "/files/" + fileId;
 
-    if (req.query.query) {
-      const newQuery = await adaptQuery(req.query.query, [namedGraph]);
-      const results = await graphStore.queryRepository(projectName, newQuery);
+//     if (req.query.query) {
+//       const newQuery = await adaptQuery(req.query.query, [namedGraph]);
+//       const results = await graphStore.queryRepository(projectName, newQuery);
 
-      return { query: newQuery, results };
-    } else {
-      const graph = await graphStore.getNamedGraph(namedGraph,projectName,"",mimeType);
-      if (!(graph.length > 0)) {
-        throw new Error('Graph not found')
-      }
-      return { graph };
-    }
-  } catch (error) {
-    error.message = (`Error finding metadata; ${error.message}`)
-    throw error
-  }
-};
+//       return { query: newQuery, results };
+//     } else {
+//       const graph = await graphStore.getNamedGraph(namedGraph, projectName, "", mimeType);
+//       if (!(graph.length > 0)) {
+//         throw new Error('Graph not found')
+//       }
+//       return { graph };
+//     }
+//   } catch (error) {
+//     error.message = (`Error finding metadata; ${error.message}`)
+//     throw error
+//   }
+// };
 
-async function getNamedGraph(req): Promise<IReturnResource> {
+async function getNamedGraph(req): Promise<IReturnGraph> {
   const projectName = req.params.projectName;
   const graphId = req.params.graphId;
   const namedGraph = process.env.DOMAIN_URL + "/lbd/" + projectName + "/graphs/" + graphId;
@@ -444,19 +454,22 @@ async function getNamedGraph(req): Promise<IReturnResource> {
       const results = await graphStore.queryRepository(projectName, newQuery);
       return { uri: namedGraph, results }
     } else {
-      console.log("getting graph")
-      const data = await graphStore.getNamedGraph(namedGraph,projectName,"",mimeType);
-      const metadata = await graphStore.getNamedGraph(`${namedGraph}.meta`,projectName,"",mimeType);
-      if (!(data.length > 0)) {
-        throw new Error(`Graph ${namedGraph} not found.`);
+      console.log("getting graph", namedGraph, projectName)
+      const data = await graphStore.getNamedGraph(namedGraph, projectName, "", mimeType);
+      if (!graphId.endsWith('.meta')) {
+        const metadata = await graphStore.getNamedGraph(`${namedGraph}.meta`, projectName, "", mimeType);
+        return { uri: namedGraph, data, metadata }
+      } else {
+        return { uri: namedGraph, data }
       }
-      return {uri: namedGraph, data, metadata }
+
     }
   } catch (error) {
     error.message = (`Could not get graph ${namedGraph}; ${error.message}`)
     throw error
   }
 };
+
 
 async function deleteNamedGraph(req, res): Promise<void> {
   const projectName = req.params.projectName;
@@ -506,7 +519,7 @@ async function setAcl(req): Promise<string> {
       acl = aclData.context;
     } else {
       try {
-        await graphStore.getNamedGraph(req.body.acl,projectName,"",mimeType);
+        await graphStore.getNamedGraph(req.body.acl, projectName, "", mimeType);
         acl = req.body.acl;
       } catch (error) {
         throw new Error("The specified acl graph does not exist yet. Please consider uploading a custom acl file or refer to already existing acl files");
@@ -571,7 +584,8 @@ async function setMetaGraph(projectName, uri, acl, label, description): Promise<
     };
 
     await graphStore.createNamedGraph(projectName, graphMeta, "");
-    return graphMetaData;
+
+    return parse(graphMetaData);
   } catch (error) {
     error.message = (`Could not create metadata graph with context ${uri}; ${error.message}`)
     throw error
@@ -593,6 +607,6 @@ export {
   getNamedGraph,
   createNamedGraph,
   deleteNamedGraph,
-
+  getDocumentMetadata,
   getPublicProjects
 };

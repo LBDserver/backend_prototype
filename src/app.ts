@@ -26,5 +26,4 @@ try {
 }
 
 app.use(notFoundHandler)
-
 export {app}

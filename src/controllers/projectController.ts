@@ -4,7 +4,8 @@ import {
     ICreateProject,
     IReturnProject ,
     IUploadResourceRequest,
-    IReturnResource
+    IReturnMetadata,
+    IReturnGraph
 } from '../interfaces/projectInterface'
 import {
     IAuthRequest
@@ -174,6 +175,33 @@ export class ProjectController extends Controller {
      * @param req 
      * @param serverErrorResponse 
      */
+    @Get('/{projectName}/files/{fileId}.meta')
+    public async getFileMeta(
+        @Path() projectName: string,
+        @Path() fileId: string,
+        @Request() req: express.Request,
+        @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
+        @Header("Authorization") authorization?: string
+    ): Promise<IReturnMetadata> {
+        try {
+            let authReq: IAuthRequest = await authenticate(req)
+            authReq = await authorize(authReq)
+            const data: IReturnMetadata = await api.getDocumentMetadata(authReq)
+            this.setStatus(200)
+            return data
+        } catch (error) {
+            console.error('error', error)
+            serverErrorResponse(500, {reason: error, message: error.message})
+        }
+    }
+
+        /**
+     * Get a project File by its ID (i.e. via the File URL). The user is authenticated via a Bearer token sent along with the request as a header "Authorization: Bearer {token}". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).
+     * @param projectName 
+     * @param fileId 
+     * @param req 
+     * @param serverErrorResponse 
+     */
     @Get('/{projectName}/files/{fileId}')
     public async getOneFile(
         @Path() projectName: string,
@@ -181,13 +209,19 @@ export class ProjectController extends Controller {
         @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
-    ): Promise<IReturnResource> {
+    ): Promise<Buffer>{
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
-            const response = await api.getDocumentFromProject(authReq)
+            const data: ArrayBuffer = await api.getDocumentFromProject(authReq)
+
             this.setStatus(200)
-            return response
+            const response = (<any>req).res as express.Response 
+            if (data) {
+                response.end(Buffer.from(data))
+            }
+            //only for documentation purposes
+            return Buffer.from(data)
         } catch (error) {
             console.error('error', error)
             serverErrorResponse(500, {reason: error, message: error.message})
@@ -206,11 +240,11 @@ export class ProjectController extends Controller {
         @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
-    ): Promise<IReturnResource> {
+    ): Promise<IReturnMetadata> {
         try {
             await this.handleFile(req)
             const authReq: IAuthRequest = await authenticate(req)
-            const response: IReturnResource = await api.uploadDocumentToProject(authReq)
+            const response: IReturnMetadata = await api.uploadDocumentToProject(authReq)
             this.setStatus(201)
             return response
         } catch (error) {
@@ -263,11 +297,11 @@ export class ProjectController extends Controller {
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string,
         @Query() query?: string
-    ): Promise<IReturnResource> {
+    ): Promise<IReturnGraph> {
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
-            const response = await api.getNamedGraph(authReq)
+            const response: IReturnGraph = await api.getNamedGraph(authReq)
             this.setStatus(200)
             return response
         } catch (error) {
@@ -288,11 +322,11 @@ export class ProjectController extends Controller {
         @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
-    ): Promise<IReturnResource> {
+    ): Promise<IReturnMetadata> {
         try {
             await this.handleFile(req)
             const authReq: IAuthRequest = await authenticate(req)
-            const response: IReturnResource = await api.createNamedGraph(authReq)
+            const response: IReturnMetadata = await api.createNamedGraph(authReq)
             this.setStatus(201)
             return response
         } catch (error) {

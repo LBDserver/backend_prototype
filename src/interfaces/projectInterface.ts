@@ -11,11 +11,11 @@ interface ICreateProject {
 interface IReturnProject {
     metadata: string,
     id: string,
+    uri?: string,
     graphs: IResourceObject,
     documents: IResourceObject,
     permissions?: string[],
     queryResults?: IQueryResults,
-    message?: string
 }
 
 interface IQueryResults {
@@ -41,9 +41,14 @@ interface IUploadResourceRequest extends express.Request {
     resource?: Buffer
 }
 
-interface IReturnResource {
+interface IReturnMetadata {
     uri: string,
     metadata?: string,
+    data?: Buffer | string,
+    results?: IQueryResults
+}
+
+interface IReturnGraph extends IReturnMetadata {
     data?: Buffer | string,
     results?: IQueryResults
 }
@@ -52,6 +57,7 @@ export {
     ICreateProject,
     IReturnProject ,
     IUploadResourceRequest,
-    IReturnResource,
+    IReturnMetadata,
+    IReturnGraph,
     IQueryResults
 }

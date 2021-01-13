@@ -36,11 +36,11 @@ const models: TsoaRoute.Models = {
         "properties": {
             "metadata": {"dataType":"string","required":true},
             "id": {"dataType":"string","required":true},
+            "uri": {"dataType":"string"},
             "graphs": {"ref":"IResourceObject","required":true},
             "documents": {"ref":"IResourceObject","required":true},
             "permissions": {"dataType":"array","array":{"dataType":"string"}},
             "queryResults": {"ref":"IQueryResults"},
-            "message": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -55,7 +55,18 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "IReturnResource": {
+    "IReturnMetadata": {
+        "dataType": "refObject",
+        "properties": {
+            "uri": {"dataType":"string","required":true},
+            "metadata": {"dataType":"string"},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"buffer"},{"dataType":"string"}]},
+            "results": {"ref":"IQueryResults"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IReturnGraph": {
         "dataType": "refObject",
         "properties": {
             "uri": {"dataType":"string","required":true},
@@ -259,6 +270,32 @@ export function RegisterRoutes(app: express.Router) {
 
 
             const promise = controller.deleteProject.apply(controller, validatedArgs as any);
+            promiseHandler(controller, promise, response, next);
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/lbd/:projectName/files/:fileId.meta',
+            function (request: any, response: any, next: any) {
+            const args = {
+                    projectName: {"in":"path","name":"projectName","required":true,"dataType":"string"},
+                    fileId: {"in":"path","name":"fileId","required":true,"dataType":"string"},
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"reason":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true}}},
+                    authorization: {"in":"header","name":"Authorization","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+            } catch (err) {
+                return next(err);
+            }
+
+            const controller = new ProjectController();
+
+
+            const promise = controller.getFileMeta.apply(controller, validatedArgs as any);
             promiseHandler(controller, promise, response, next);
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa

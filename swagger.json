@@ -75,6 +75,9 @@
 					"id": {
 						"type": "string"
 					},
+					"uri": {
+						"type": "string"
+					},
 					"graphs": {
 						"$ref": "#/components/schemas/IResourceObject"
 					},
@@ -89,9 +92,6 @@
 					},
 					"queryResults": {
 						"$ref": "#/components/schemas/IQueryResults"
-					},
-					"message": {
-						"type": "string"
 					}
 				},
 				"required": [
@@ -123,7 +123,36 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"IReturnResource": {
+			"IReturnMetadata": {
+				"properties": {
+					"uri": {
+						"type": "string"
+					},
+					"metadata": {
+						"type": "string"
+					},
+					"data": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "byte"
+							},
+							{
+								"type": "string"
+							}
+						]
+					},
+					"results": {
+						"$ref": "#/components/schemas/IQueryResults"
+					}
+				},
+				"required": [
+					"uri"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"IReturnGraph": {
 				"properties": {
 					"uri": {
 						"type": "string"
@@ -627,6 +656,75 @@
 				]
 			}
 		},
+		"/lbd/{projectName}/files/{fileId}.meta": {
+			"get": {
+				"operationId": "GetFileMeta",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IReturnMetadata"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										},
+										"reason": {
+											"properties": {},
+											"additionalProperties": {},
+											"type": "object"
+										}
+									},
+									"required": [
+										"message",
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get a project File by its ID (i.e. via the File URL). The user is authenticated via a Bearer token sent along with the request as a header \"Authorization: Bearer {token}\". Whether authentication is mandatory depends on the ACL policy of the requested resource. (e.g. an open project may grant READ access to an unauthenticated agent).",
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectName",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Authorization",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/lbd/{projectName}/files/{fileId}": {
 			"get": {
 				"operationId": "GetOneFile",
@@ -636,7 +734,8 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/IReturnResource"
+									"type": "string",
+									"format": "byte"
 								}
 							}
 						}
@@ -765,7 +864,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/IReturnResource"
+									"$ref": "#/components/schemas/IReturnMetadata"
 								}
 							}
 						}
@@ -826,7 +925,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/IReturnResource"
+									"$ref": "#/components/schemas/IReturnGraph"
 								}
 							}
 						}
@@ -955,7 +1054,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/IReturnResource"
+									"$ref": "#/components/schemas/IReturnMetadata"
 								}
 							}
 						}
