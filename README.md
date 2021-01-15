@@ -14,7 +14,7 @@
 ## Startup
 * Start both [MongoDB](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and GraphDB. By default they will run respectively on port 27017 and port 7200.
 * Run the command `npm run dev` in a terminal (in the folder where you installed this repository)
-* The application will be hosted on port 3000. You may find it at http://localhost:3000.
+* The application will be hosted on port 5000. You may find it at http://localhost:5000.
 
 ## API
-* Api documentation coming soon!
+* The OpenAPI specifications are automatically generated and available on "http://localhost:5000/docs". However, it is recommended to use the higher level functions provided in the npm package ["lbd-server"](https://www.npmjs.com/package/lbd-server), which are are documented at the [LBDserver API github repository](https://github.com/LBDserver/API).
