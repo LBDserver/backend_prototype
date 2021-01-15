@@ -6,20 +6,13 @@ import { parse } from "@frogcat/ttl2jsonld"
 import { adaptQuery, queryPermissions } from "../authApi/authorisation/basicPermissions"
 import undoDatabaseActions from '../util/databaseCleanup'
 import {
-  ICreateProject,
   IReturnProject,
-  IUploadResourceRequest,
   IReturnMetadata,
   IQueryResults,
-  IReturnGraph
-} from '../interfaces/projectInterface'
-import {
-  IUser,
-  IRegisterRequest,
-  ILoginRequest,
-  IReturnUser,
-  IAuthRequest
-} from '../interfaces/userInterface'
+  IReturnGraph,
+} from 'lbd-server'
+
+import {IAuthRequest} from '../interfaces/userInterface'
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -52,11 +45,11 @@ async function createProject(req): Promise<IReturnProject> {
     writeCommands.saveProjectToUser.done = await creator.save();
 
     // not in writeCommands because automatically removed with project repository
-    await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
+    const metadata = await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
     await createDefaultAclGraph(id, creator, acl, open);
 
     return ({
-      metadata: repoMetaData,
+      metadata,
       id,
       uri: repoUrl,
       graphs: {},
@@ -169,7 +162,7 @@ async function getOneProject(req): Promise<IReturnProject> {
     }
     if (req.query.query) {
       const results = await queryProject(req);
-      project.queryResults = results
+      project.results = results
     }
 
     return project

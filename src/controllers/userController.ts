@@ -1,6 +1,7 @@
 import { Controller, Example, Post, Route, SuccessResponse, TsoaResponse, Res, Body, Request, Header } from 'tsoa'
 import { authenticate, createUser, loginUser, logoutUser } from '../authApi/userFunctions'
-import { IUser, IRegisterRequest, IReturnUser, IAuthRequest } from '../interfaces/userInterface'
+import { IUser, IRegisterRequest, IReturnUser } from 'lbd-server'
+import {IAuthRequest} from '../interfaces/userInterface'
 import * as express from 'express'
 
 const userExample = {

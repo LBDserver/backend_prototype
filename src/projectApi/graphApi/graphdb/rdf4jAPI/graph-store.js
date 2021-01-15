@@ -23,7 +23,7 @@ async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
 
     const response = await axios(options);
     console.info(`Created named graph ${context}`)
-    return response.data;
+    return parse(data);
   } catch (error) {
     error.message = (
       `Failed to create named graph ${context}; ${error.message}`

@@ -90,7 +90,7 @@
 						},
 						"type": "array"
 					},
-					"queryResults": {
+					"results": {
 						"$ref": "#/components/schemas/IQueryResults"
 					}
 				},
@@ -130,24 +130,11 @@
 					},
 					"metadata": {
 						"type": "string"
-					},
-					"data": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "byte"
-							},
-							{
-								"type": "string"
-							}
-						]
-					},
-					"results": {
-						"$ref": "#/components/schemas/IQueryResults"
 					}
 				},
 				"required": [
-					"uri"
+					"uri",
+					"metadata"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -157,22 +144,14 @@
 					"uri": {
 						"type": "string"
 					},
-					"metadata": {
-						"type": "string"
-					},
 					"data": {
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "byte"
-							},
-							{
-								"type": "string"
-							}
-						]
+						"$ref": "#/components/schemas/IResourceObject"
 					},
 					"results": {
 						"$ref": "#/components/schemas/IQueryResults"
+					},
+					"metadata": {
+						"type": "string"
 					}
 				},
 				"required": [
@@ -212,7 +191,6 @@
 					"username",
 					"uri",
 					"email",
-					"tokens",
 					"projects"
 				],
 				"type": "object",
@@ -465,10 +443,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/IReturnProject"
-									},
-									"type": "array"
+									"$ref": "#/components/schemas/IReturnProject"
 								}
 							}
 						}

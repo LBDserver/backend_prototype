@@ -15,7 +15,7 @@ interface IReturnProject {
     graphs: IResourceObject,
     documents: IResourceObject,
     permissions?: string[],
-    queryResults?: IQueryResults,
+    results?: IQueryResults,
 }
 
 interface IQueryResults {
@@ -50,7 +50,7 @@ interface IReturnMetadata {
 
 interface IReturnGraph extends IReturnMetadata {
     data?: Buffer | string,
-    results?: IQueryResults
+    results?: IQueryResults,
 }
 
 export {

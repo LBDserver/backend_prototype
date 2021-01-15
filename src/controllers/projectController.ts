@@ -3,10 +3,9 @@ import { authenticate, authorize } from '../authApi/userFunctions'
 import {
     ICreateProject,
     IReturnProject ,
-    IUploadResourceRequest,
     IReturnMetadata,
     IReturnGraph
-} from '../interfaces/projectInterface'
+} from 'lbd-server'
 import {
     IAuthRequest
 } from '../interfaces/userInterface'
@@ -77,8 +76,10 @@ export class ProjectController extends Controller {
         @Header("Accept") mimeType?: string,
         @Header("Authorization") authorization?: string,
         @Query() query?: string
-    ): Promise<IReturnProject[]> {
+    ): Promise<IReturnProject> {
         try {
+            console.log('query', query)
+            console.log('req.query', req.query)
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
             const response = await api.getOneProject(authReq)

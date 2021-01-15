@@ -3,7 +3,7 @@ import validator from 'validator'
 import * as bcrypt from 'bcryptjs'
 import * as jwt from 'jsonwebtoken'
 
-import { IUser } from '../../../../interfaces/userInterface'
+import { IUser } from 'lbd-server'
 import Project from './ProjectModel'
 
 // about a single UserDocument (e.g. dynamic methods)

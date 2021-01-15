@@ -1,4 +1,5 @@
-import { IRegisterRequest, IReturnUser, IAuthRequest, ILoginRequest, IUser } from "../../interfaces/userInterface";
+import { IRegisterRequest, IReturnUser, ILoginRequest, IUser } from "lbd-server";
+import {IAuthRequest} from '../../interfaces/userInterface'
 import User, { IUserDocument, IUserModel } from '../../projectApi/documentApi/mongodb/models/UserModel'
 import * as jwt from 'jsonwebtoken'
 import * as express from 'express'

@@ -30,6 +30,8 @@
     "graphdb": "^1.5.0",
     "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^8.5.1",
+    "lbd-api": "git://github.com/LBDserver/API",
+    "lbd-server": "^0.1.2",
     "ldflex": "^2.11.1",
     "lodash": "^4.17.20",
     "mongodb": "^3.6.3",
@@ -53,8 +55,7 @@
     "typescript": "^4.1.3",
     "util": "^0.12.3",
     "uuid": "^8.3.2",
-    "validator": "^13.5.2",
-    "lbd-api": "git://github.com/LBDserver/API"
+    "validator": "^13.5.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

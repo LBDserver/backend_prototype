@@ -1,5 +1,6 @@
 import * as express from 'express'
-import { IReturnUser, IAuthRequest } from '../interfaces/userInterface'
+import {IReturnUser} from 'lbd-server'
+import { IAuthRequest } from '../interfaces/userInterface'
 import authModule from './mongodb/functions'
 import { basicPermissions } from './authorisation/basicPermissions'
 
