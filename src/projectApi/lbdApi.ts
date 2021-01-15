@@ -12,7 +12,7 @@ import {
   IReturnGraph,
 } from 'lbd-server'
 
-import {IAuthRequest} from '../interfaces/userInterface'
+import { IAuthRequest } from '../interfaces/userInterface'
 
 //////////////////////////// PROJECT API ///////////////////////////////
 // create new project owned by the user
@@ -118,7 +118,7 @@ async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
   try {
     const projects = []
     for (const project of req.user.projects) {
-      const data = await findProjectData(project, mimeType)
+      const data = await findProjectData(project, mimeType, req.user)
       projects.push(data)
     }
     return (projects);
@@ -137,7 +137,7 @@ async function getPublicProjects(req): Promise<IReturnProject[]> {
     for (const project of projects) {
       const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
       if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
-        const projectData = await findProjectData(project._id, mimeType)
+        const projectData = await findProjectData(project._id, mimeType, req.user)
         publicProjects.push(projectData)
       }
     }
@@ -154,7 +154,7 @@ async function getOneProject(req): Promise<IReturnProject> {
   try {
     const projectName = req.params.projectName;
     const mimeType = req.headers.accept || "application/ld+json"
-    const projectData = await findProjectData(projectName, mimeType)
+    const projectData = await findProjectData(projectName, mimeType, req.user)
     const permissions: string[] = Array.from(req.permissions)
     const project: IReturnProject = {
       ...projectData,
@@ -172,7 +172,7 @@ async function getOneProject(req): Promise<IReturnProject> {
   }
 };
 
-async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
+async function findProjectData(projectName, mimeType, user): Promise<IReturnProject> {
   try {
     const projectGraph = await graphStore.getNamedGraph(
       `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
@@ -180,7 +180,6 @@ async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
       "",
       mimeType
     );
-    console.log('projectGraph', projectGraph)
     const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
     const files = await File.find({
       project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
@@ -193,7 +192,12 @@ async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
         "",
         mimeType
       );
-      documents[file.url] = data
+      const permissions = await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName)
+      console.log('acl', data["lbd:hasAcl"]["@id"])
+      console.log('permissions', permissions)
+      if (permissions.size > 0) {
+        documents[file.url] = { metadata: data, permissions: Array.from(permissions) }
+      }
     }
 
     let graphs = {};
@@ -208,7 +212,13 @@ async function findProjectData(projectName, mimeType): Promise<IReturnProject> {
           "",
           mimeType
         );
-        graphs[result.contextID.value] = data
+        
+        const permissions = await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName)
+        console.log('acl', data["lbd:hasAcl"]["@id"])
+        console.log('permissions', permissions)
+        if (permissions.size > 0) {
+          graphs[result.contextID.value] = { metadata: data, permissions: Array.from(permissions) }
+        }
       }
     }
 

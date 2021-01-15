@@ -241,8 +241,13 @@ getAcl = (req, url, type) => {
     })
 }
 
-queryPermissions = (user, acl, project) => {
-    return new Promise(async (resolve, reject) => {
+/**
+ * 
+ * @param {*} user 
+ * @param {*} acl 
+ * @param {*} project 
+ */
+async function queryPermissions(user, acl, project) {
         try {
             let allowedModes = new Set()
 
@@ -317,11 +322,11 @@ queryPermissions = (user, acl, project) => {
             //         }
             //     }
             // }
-            resolve(allowedModes)
+            return allowedModes
         } catch (error) {
-            reject(error)
+            error.message = `Error checking permissions; ${error.message}`
+            throw error
         }
-    })
 }
 
 // agent groups are local here
