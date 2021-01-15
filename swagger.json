@@ -704,16 +704,8 @@
 			"get": {
 				"operationId": "GetOneFile",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string",
-									"format": "byte"
-								}
-							}
-						}
+					"204": {
+						"description": "No content"
 					},
 					"500": {
 						"description": "",

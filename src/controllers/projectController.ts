@@ -210,19 +210,17 @@ export class ProjectController extends Controller {
         @Request() req: express.Request,
         @Res() serverErrorResponse: TsoaResponse<500, { reason: {[key: string]: any}, message: string }>,
         @Header("Authorization") authorization?: string
-    ): Promise<Buffer>{
+    ) {
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
             const data: ArrayBuffer = await api.getDocumentFromProject(authReq)
-
-            this.setStatus(200)
             const response = (<any>req).res as express.Response 
             if (data) {
                 response.end(Buffer.from(data))
             }
             //only for documentation purposes
-            return Buffer.from(data)
+            // return Buffer.from(data)
         } catch (error) {
             console.error('error', error)
             serverErrorResponse(500, {reason: error, message: error.message})
