@@ -48,7 +48,10 @@ async function createProject(req): Promise<IReturnProject> {
     const metadata = await graphStore.createNamedGraph(id, { context: metaTitle, baseURI: metaTitle, data: repoMetaData });
     await createDefaultAclGraph(id, creator, acl, open);
 
+    const permissions: string[] = Array.from(await queryPermissions(req.user, metadata["lbd:hasAcl"]["@id"], id))
+
     return ({
+      permissions,
       metadata,
       id,
       uri: repoUrl,
@@ -178,8 +181,9 @@ async function getOneProject(req: IAuthRequest) {
 async function getProjectData(projectName, user, mimeType): Promise<IReturnProject> {
 
   try {
+    const projectUri = `${process.env.DOMAIN_URL}/lbd/${projectName}`
     const projectGraph = await graphStore.getNamedGraph(
-      `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
+      `${projectUri}.meta`,
       projectName,
       "",
       mimeType
@@ -190,7 +194,7 @@ async function getProjectData(projectName, user, mimeType): Promise<IReturnProje
 
     const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
     const files = await File.find({
-      project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
+      project: projectUri,
     });
     let documents = {};
     for (const file of files) {
@@ -200,10 +204,10 @@ async function getProjectData(projectName, user, mimeType): Promise<IReturnProje
         "",
         mimeType
       );
-      const permissions = await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName)
+      const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
       console.log('acl', data["lbd:hasAcl"]["@id"])
       console.log('permissions', permissions)
-      if (permissions.size > 0) {
+      if (permissions.length > 0) {
         documents[file.url] = { metadata: data, permissions: Array.from(permissions) }
       }
     }
@@ -221,21 +225,22 @@ async function getProjectData(projectName, user, mimeType): Promise<IReturnProje
           mimeType
         );
         
-        const permissions = await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName)
+        const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
         console.log('acl', data["lbd:hasAcl"]["@id"])
         console.log('permissions', permissions)
-        if (permissions.size > 0) {
+        if (permissions.length > 0) {
           graphs[result.contextID.value] = { metadata: data, permissions: Array.from(permissions) }
         }
       }
     }
 
     const project: IReturnProject = {
+      permissions,
       metadata: projectGraph,
       graphs,
       documents,
       id: projectName,
-      
+      uri: projectUri
     }
 
     return project;
@@ -265,6 +270,9 @@ async function deleteProject(req): Promise<void> {
 
     writeCommands.deleteProjectFromUser = await owner.save();
     writeCommands.deleteProjectDoc.done = await docStore.deleteProjectDoc(id)
+
+
+    // to do: delete files associated with project
 
     // delete from graph store (irreversible; so the last item to be removed)
     await graphStore.deleteRepository(id);
@@ -347,9 +355,10 @@ async function uploadDocumentToProject(req): Promise<IReturnMetadata> {
 
     // upload document metadata to the graph store
     const acl = await setAcl(req);
-    const metaContext = await setMetaGraph(projectName, documentUrl, acl, label, description);
+    const metadata = await setMetaGraph(projectName, documentUrl, acl, label, description);
+    const permissions: string[] = Array.from(await queryPermissions(req.user, metadata["lbd:hasAcl"]["@id"], projectName))
 
-    return { uri: documentUrl, metadata: metaContext };
+    return { uri: documentUrl, metadata, permissions };
   } catch (error) {
     error.message = (`Error uploading file; ${error.message}`)
     throw error
@@ -377,7 +386,8 @@ async function getDocumentMetadata(req): Promise<IReturnMetadata> {
   const mimeType = req.headers.accept || "application/ld+json"
   try {
     const metadata = await graphStore.getNamedGraph(`${uri}`, projectName, "", mimeType)
-    return { uri, metadata };
+    const permissions: string[] = Array.from(await queryPermissions(req.user, metadata["lbd:hasAcl"]["@id"], projectName))
+    return { uri, metadata, permissions };
   } catch (error) {
     error.message = (`Unable to get document with uri ${uri}; ${error.message}`)
     throw error
@@ -424,7 +434,9 @@ async function createNamedGraph(req): Promise<IReturnMetadata> {
       description
     );
 
-    return { uri, metadata };
+    const permissions: string[] = Array.from(await queryPermissions(req.user, acl, projectName))
+
+    return { uri, metadata, permissions };
   } catch (error) {
     error.message = (`Unable to create named graph; ${error.message}`)
     throw error
@@ -462,6 +474,7 @@ async function getNamedGraph(req): Promise<IReturnGraph> {
   const graphId = req.params.graphId;
   const namedGraph = process.env.DOMAIN_URL + "/lbd/" + projectName + "/graphs/" + graphId;
   const mimeType = req.headers.accept || 'application/ld+json'
+  let permissions: string[]
   try {
     if (req.query.query) {
       const newQuery = await adaptQuery(req.query.query, [namedGraph]);
@@ -469,12 +482,16 @@ async function getNamedGraph(req): Promise<IReturnGraph> {
       return { uri: namedGraph, results }
     } else {
       console.log("getting graph", namedGraph, projectName)
+      // get the metadata graph
       const data = await graphStore.getNamedGraph(namedGraph, projectName, "", mimeType);
+      permissions = Array.from(await queryPermissions(req.user, data["lbd:hasAcl"]["@id"], projectName))
+
       if (!graphId.endsWith('.meta')) {
         const metadata = await graphStore.getNamedGraph(`${namedGraph}.meta`, projectName, "", mimeType);
-        return { uri: namedGraph, data, metadata }
+        permissions = Array.from(await queryPermissions(req.user, metadata["lbd:hasAcl"]["@id"], projectName))
+        return { uri: namedGraph, data, metadata, permissions }
       } else {
-        return { uri: namedGraph, data }
+        return { uri: namedGraph, data, permissions }
       }
 
     }

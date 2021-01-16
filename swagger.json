@@ -97,8 +97,10 @@
 				"required": [
 					"metadata",
 					"id",
+					"uri",
 					"graphs",
-					"documents"
+					"documents",
+					"permissions"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -130,11 +132,18 @@
 					},
 					"metadata": {
 						"type": "string"
+					},
+					"permissions": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
 					"uri",
-					"metadata"
+					"metadata",
+					"permissions"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -143,6 +152,12 @@
 				"properties": {
 					"uri": {
 						"type": "string"
+					},
+					"permissions": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"data": {
 						"$ref": "#/components/schemas/IResourceObject"

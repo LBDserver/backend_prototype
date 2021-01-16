@@ -36,10 +36,10 @@ const models: TsoaRoute.Models = {
         "properties": {
             "metadata": {"dataType":"string","required":true},
             "id": {"dataType":"string","required":true},
-            "uri": {"dataType":"string"},
+            "uri": {"dataType":"string","required":true},
             "graphs": {"ref":"IResourceObject","required":true},
             "documents": {"ref":"IResourceObject","required":true},
-            "permissions": {"dataType":"array","array":{"dataType":"string"}},
+            "permissions": {"dataType":"array","array":{"dataType":"string"},"required":true},
             "results": {"ref":"IQueryResults"},
         },
         "additionalProperties": false,
@@ -60,6 +60,7 @@ const models: TsoaRoute.Models = {
         "properties": {
             "uri": {"dataType":"string","required":true},
             "metadata": {"dataType":"string","required":true},
+            "permissions": {"dataType":"array","array":{"dataType":"string"},"required":true},
         },
         "additionalProperties": false,
     },
@@ -68,6 +69,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "uri": {"dataType":"string","required":true},
+            "permissions": {"dataType":"array","array":{"dataType":"string"}},
             "data": {"ref":"IResourceObject"},
             "results": {"ref":"IQueryResults"},
             "metadata": {"dataType":"string"},
