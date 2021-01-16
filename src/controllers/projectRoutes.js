@@ -5,7 +5,7 @@ const multer = require('multer')
 const {
     getAllProjects,
     createProject,
-    getOneProject,
+    getProjectData,
     updateProject,
     deleteProject,
     queryProject,

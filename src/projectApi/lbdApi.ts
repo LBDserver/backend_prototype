@@ -113,13 +113,18 @@ async function createDefaultAclGraph(id, creator, aclUrl, open): Promise<string>
 // send back all projects OWNED by the user (user profile from doc store)
 async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
   const mimeType = req.headers.accept || "application/ld+json"
-  console.log(req.headers.accept)
+  const user = req.user
 
   try {
     const projects = []
-    for (const project of req.user.projects) {
-      const data = await findProjectData(project, mimeType, req.user)
-      projects.push(data)
+    const projectDocuments = await docStore.findAllProjectDocuments()
+    for (const project of projectDocuments) {
+      if (req.user.projects.includes(project._id)) {
+        const permissions: string[] = Array.from(await queryPermissions(req.user, `${project.url}/.acl`, project._id))
+        const data = await getProjectData(project._id, user, mimeType)
+        data.permissions = permissions
+        projects.push(data)
+      }
     }
     return (projects);
   } catch (error) {
@@ -131,13 +136,15 @@ async function getAllProjects(req: IAuthRequest): Promise<IReturnProject[]> {
 async function getPublicProjects(req): Promise<IReturnProject[]> {
   try {
     const mimeType = req.headers.accept || "application/ld+json"
-    console.log('req.headers.accept', req.headers.accept)
+    const user = req.user
     const publicProjects = []
     const projects = await docStore.findAllProjectDocuments()
     for (const project of projects) {
-      const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
-      if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
-        const projectData = await findProjectData(project._id, mimeType, req.user)
+      const permissions: string[] = Array.from(await queryPermissions(undefined, `${project.url}/.acl`, project._id))
+      if (permissions.includes("http://www.w3.org/ns/auth/acl#Read")) {
+        const projectData =  await getProjectData(project._id, user, mimeType)
+        projectData.permissions = permissions
+        console.log('projectData', projectData)
         publicProjects.push(projectData)
       }
     }
@@ -149,17 +156,14 @@ async function getPublicProjects(req): Promise<IReturnProject[]> {
   }
 }
 
-// send back project metadata and named graphs.
-async function getOneProject(req): Promise<IReturnProject> {
+async function getOneProject(req: IAuthRequest) {
+  const projectName = req.params.projectName;
+  const mimeType = req.headers.accept || "application/ld+json"
+  const user = req.user
+
   try {
-    const projectName = req.params.projectName;
-    const mimeType = req.headers.accept || "application/ld+json"
-    const projectData = await findProjectData(projectName, mimeType, req.user)
-    const permissions: string[] = Array.from(req.permissions)
-    const project: IReturnProject = {
-      ...projectData,
-      permissions
-    }
+    const project = await getProjectData(projectName, user, mimeType)
+    project.permissions = req.permissions
     if (req.query.query) {
       const results = await queryProject(req);
       project.results = results
@@ -167,12 +171,12 @@ async function getOneProject(req): Promise<IReturnProject> {
 
     return project
   } catch (error) {
-    error.message = (`Unable to get project; ${error.message}`)
-    throw error
+    
   }
-};
+}
 
-async function findProjectData(projectName, mimeType, user): Promise<IReturnProject> {
+async function getProjectData(projectName, user, mimeType): Promise<IReturnProject> {
+
   try {
     const projectGraph = await graphStore.getNamedGraph(
       `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
@@ -180,6 +184,10 @@ async function findProjectData(projectName, mimeType, user): Promise<IReturnProj
       "",
       mimeType
     );
+
+    const permissions: string[]= Array.from(await queryPermissions(user, projectGraph["lbd:hasAcl"]["@id"], projectName))
+
+
     const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
     const files = await File.find({
       project: `${process.env.DOMAIN_URL}/lbd/${projectName}`,
@@ -222,12 +230,15 @@ async function findProjectData(projectName, mimeType, user): Promise<IReturnProj
       }
     }
 
-    return ({
+    const project: IReturnProject = {
       metadata: projectGraph,
       graphs,
       documents,
-      id: projectName
-    });
+      id: projectName,
+      
+    }
+
+    return project;
   } catch (error) {
     error.message = (`Could not find project data for project with id ${projectName}; ${error.message}`)
     throw error

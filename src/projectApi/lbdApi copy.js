@@ -123,7 +123,7 @@ getPublicProjects = async (req, res) => {
       console.log('project', project)
       const permissions = await queryPermissions(undefined, `${project.url}/.acl`, project._id)
       if (permissions.has("http://www.w3.org/ns/auth/acl#Read")) {
-        const projectData = await findProjectData(project._id)
+        const projectData = await getProjectData(project._id)
         publicProjects.push(projectData)
       }
     }
@@ -147,7 +147,7 @@ getOneProject = async (req, res) => {
     } else {
       const projectName = req.params.projectName;
 
-      const projectData = await findProjectData(projectName)
+      const projectData = await getProjectData(projectName)
       projectData.permissions = Array.from(req.permissions)
       return res.status(200).json(projectData);
     }
@@ -156,7 +156,7 @@ getOneProject = async (req, res) => {
   }
 };
 
-findProjectData = async (projectName) => {
+getProjectData = async (projectName) => {
   try {
     const projectGraph = await graphStore.getNamedGraph(
       `${process.env.DOMAIN_URL}/lbd/${projectName}.meta`,
