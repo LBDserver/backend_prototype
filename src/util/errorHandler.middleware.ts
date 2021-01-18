@@ -11,7 +11,7 @@ function errorHandler(
         console.warn(`Caught validation error for ${req.path}:`, err.fields)
         return res.status(422).json({
             message: "Validation failed",
-            details: err?.fields
+            details: err.fields
         })
     }
     if (err instanceof Error) {
