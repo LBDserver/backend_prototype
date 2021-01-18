@@ -11,6 +11,19 @@
 * Once the repository is extracted, run `npm install` to install the necessary modules.
 * Create a dev.env file in the `>config` directory, and copy the items from `dev.env.template`. You can change ports, token secrets, admin configuration etc. in this .dev file. 
 
+## Folder setup
+* After installing this backend from the above step, proceed to also install the frontend from the main LDBServer repo.
+* Please place these two folders as below:
+    .
+    ├── front-react                   # frontend from the main LBDServer repo
+    └── backend_prototype            # backend from the main LDBServer repo
+
+## Startup
+* Start both [MongoDB](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and GraphDB. By default they will run respectively on port 27017 and port 7200.
+* Run the command `npm start` in a terminal (in the folder where you installed this repository). Since concurrently is installed, this command will simultaneously start both the frontend and backend (Please ensure that you follow the folder structure as mentioned above)
+* The application will be hosted on port 5000. You may find it at http://localhost:5000.
+
+
 ## Startup
 * Start both [MongoDB](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and GraphDB. By default they will run respectively on port 27017 and port 7200.
 * Run the command `npm run dev` in a terminal (in the folder where you installed this repository)
