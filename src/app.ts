@@ -5,7 +5,7 @@ import * as bodyparser from 'body-parser'
 import {RegisterRoutes} from './routes'
 import * as swaggerUi from 'swagger-ui-express'
 import errorHandler from "./util/errorHandler.middleware"
-import notFoundHandler from "./util/notfoundHandler.middleware"
+import notFoundHandler from "./util/notFoundHandler.middleware"
 import requestLoggerMiddleware from "./util/requestLogger.middleware"
 
 const app = express()

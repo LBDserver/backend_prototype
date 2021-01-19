@@ -1,0 +1,30 @@
+#===============================================================
+# To make this work, install Docker Desktop first from:
+# https://docs.docker.com/get-docker
+#===============================================================
+
+version: "3"
+services:
+
+ lbdbackend:
+  container_name: lbdbackend
+  restart: always
+  build: ..\\..
+  ports: 
+   - "5000:5000"
+  links: 
+   - mongo
+   - graph-db
+ 
+ mongo:
+  container_name: mongo
+  image: mongo
+  ports:
+   - "27018:27017"
+ graph-db:
+  container_name: graph-db
+  image: ontotext/graphdb:9.5.0-ee
+  ports:
+   - "7200:7200"
+
+   
