@@ -45,11 +45,20 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Metadata": {
+        "dataType": "refObject",
+        "properties": {
+            "rdfs:label": {"dataType":"string","required":true},
+            "rdfs:comment": {"dataType":"string","required":true},
+            "lbd:acl": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ICreateProject": {
         "dataType": "refObject",
         "properties": {
-            "title": {"dataType":"string","required":true},
-            "description": {"dataType":"string","required":true},
+            "metadata": {"ref":"Metadata","required":true},
             "open": {"dataType":"boolean","required":true},
         },
         "additionalProperties": false,
