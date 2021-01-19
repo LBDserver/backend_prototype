@@ -105,37 +105,21 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Metadata": {
-				"properties": {
-					"rdfs:label": {
-						"type": "string"
-					},
-					"rdfs:comment": {
-						"type": "string"
-					},
-					"lbd:acl": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"rdfs:label",
-					"rdfs:comment",
-					"lbd:acl"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"ICreateProject": {
 				"properties": {
-					"metadata": {
-						"$ref": "#/components/schemas/Metadata"
+					"title": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
 					},
 					"open": {
 						"type": "boolean"
 					}
 				},
 				"required": [
-					"metadata",
+					"title",
+					"description",
 					"open"
 				],
 				"type": "object",
