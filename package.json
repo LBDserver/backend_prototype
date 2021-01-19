@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "all": "concurrently \"npm:dev\" \"npm:generate\"",
+    "start": "concurrently \"npm run dev\" \"cd ../front-react &npm start\"",
     "dev": "env-cmd -f ./config/dev.env nodemon -x ts-node src/index.ts",
     "generate": "tsoa routes && tsoa swagger",
     "routes": "tsoa routes",
