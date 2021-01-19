@@ -5,10 +5,10 @@
 
 docker system prune
 docker stop lbdbackend
-docker stop graph-db
+docker stop graphdb
 docker stop mongo
 
 docker rm lbdbackend
-docker rm graph-db
+docker rm graphdb
 docker rm mongo
 pause

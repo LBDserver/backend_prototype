@@ -8,10 +8,11 @@ const parse = require("@frogcat/ttl2jsonld").parse
 async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
   try {
     const body = JSON.stringify(defaultBody(context, baseURI, data));
-
+    const url = `${process.env.GRAPHDB_URL}/rest/data/import/upload/${repositoryId}/text`
+    console.log('url', url)
     const options = {
       method: "post",
-      url: `http://localhost:7200/rest/data/import/upload/${repositoryId}/text`,
+      url,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Basic ${btoa(

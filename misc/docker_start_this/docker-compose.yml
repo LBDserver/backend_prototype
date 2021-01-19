@@ -14,17 +14,17 @@ services:
    - "5000:5000"
   links: 
    - mongo
-   - graph-db
+   - graphdb
  
  mongo:
   container_name: mongo
   image: mongo
   ports:
    - "27018:27017"
- graph-db:
-  container_name: graph-db
-  image: ontotext/graphdb:9.5.0-ee
+ graphdb:
+  container_name: graphdb
+  image: daschswiss/graphdb:9.0.0-free
   ports:
-   - "7200:7200"
+   - "7201:7200"
 
    
