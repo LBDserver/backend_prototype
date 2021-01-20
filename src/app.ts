@@ -9,7 +9,11 @@ import notFoundHandler from "./util/notFoundHandler.middleware"
 import requestLoggerMiddleware from "./util/requestLogger.middleware"
 
 const app = express()
+// app.use(cors({
+//     origin: process.env.FRONT_END_URL
+// }))
 app.use(cors())
+
 app.use(bodyparser.json())
 app.use(requestLoggerMiddleware)
 
