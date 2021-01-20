@@ -330,7 +330,7 @@ export class ProjectController extends Controller {
             this.setStatus(201)
             return response
         } catch (error) {
-            console.error('error', error)
+            // console.error('error', error)
             serverErrorResponse(500, {reason: error, message: error.message})
         }
     }

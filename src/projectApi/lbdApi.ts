@@ -147,7 +147,6 @@ async function getPublicProjects(req): Promise<IReturnProject[]> {
       if (permissions.includes("http://www.w3.org/ns/auth/acl#Read")) {
         const projectData =  await getProjectData(project._id, user, mimeType)
         projectData.permissions = permissions
-        console.log('projectData', projectData)
         publicProjects.push(projectData)
       }
     }
@@ -193,33 +192,33 @@ async function getProjectData(projectName, user, mimeType): Promise<IReturnProje
 
 
     const allNamed = await graphStore.getAllNamedGraphs(projectName, "");
-    const files = await File.find({
-      project: projectUri,
-    });
+    console.log('allNamed', allNamed.results.bindings)
     let documents = {};
-    for (const file of files) {
-      const data = await graphStore.getNamedGraph(
-        `${file.url}.meta`,
-        projectName,
-        "",
-        mimeType
-      );
-      const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
-      console.log('acl', data["lbd:hasAcl"]["@id"])
-      console.log('permissions', permissions)
-      if (permissions.length > 0) {
-        documents[file.url] = { metadata: data, permissions: Array.from(permissions) }
-      }
-    }
+    let graphs = {}
+    for (const r of allNamed.results.bindings) {
+      const resource = r.contextID.value
+      const split = resource.split('/')
+      const type = split[split.length-2]
+      console.log('type', type)
+      if (type === 'files') {
+        console.log(resource, "is a file")
 
-    let graphs = {};
-    for (const result of allNamed.results.bindings) {
-      if (
-        !result.contextID.value.endsWith("acl") &&
-        !result.contextID.value.endsWith("meta")
-      ) {
         const data = await graphStore.getNamedGraph(
-          `${result.contextID.value}.meta`,
+              resource,
+              projectName,
+              "",
+              mimeType
+            );
+            const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
+            console.log('acl', data["lbd:hasAcl"]["@id"])
+            console.log('permissions', permissions)
+            if (permissions.length > 0) {
+              documents[resource.replace('.meta', '')] = { metadata: data, permissions: Array.from(permissions) }
+            }
+      } else if (type === 'graphs' && !split[split.length -1].endsWith('.meta') && !split[split.length -1].endsWith('.acl')) {
+        console.log(resource, "is a graph")
+        const data = await graphStore.getNamedGraph(
+          `${resource}.meta`,
           projectName,
           "",
           mimeType
@@ -229,10 +228,46 @@ async function getProjectData(projectName, user, mimeType): Promise<IReturnProje
         console.log('acl', data["lbd:hasAcl"]["@id"])
         console.log('permissions', permissions)
         if (permissions.length > 0) {
-          graphs[result.contextID.value] = { metadata: data, permissions: Array.from(permissions) }
+          graphs[resource] = { metadata: data, permissions: Array.from(permissions) }
         }
       }
-    }
+    } 
+
+    // for (const file of files) {
+    //   const data = await graphStore.getNamedGraph(
+    //     `${file.url}.meta`,
+    //     projectName,
+    //     "",
+    //     mimeType
+    //   );
+    //   const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
+    //   console.log('acl', data["lbd:hasAcl"]["@id"])
+    //   console.log('permissions', permissions)
+    //   if (permissions.length > 0) {
+    //     documents[file.url] = { metadata: data, permissions: Array.from(permissions) }
+    //   }
+    // }
+
+    // for (const result of allNamed.results.bindings) {
+    //   if (
+    //     !result.contextID.value.endsWith("acl") &&
+    //     !result.contextID.value.endsWith("meta")
+    //   ) {
+    //     const data = await graphStore.getNamedGraph(
+    //       `${result.contextID.value}.meta`,
+    //       projectName,
+    //       "",
+    //       mimeType
+    //     );
+        
+    //     const permissions = Array.from(await queryPermissions(user, data["lbd:hasAcl"]["@id"], projectName))
+    //     console.log('acl', data["lbd:hasAcl"]["@id"])
+    //     console.log('permissions', permissions)
+    //     if (permissions.length > 0) {
+    //       graphs[result.contextID.value] = { metadata: data, permissions: Array.from(permissions) }
+    //     }
+    //   }
+    // }
 
     const project: IReturnProject = {
       permissions,
@@ -333,10 +368,7 @@ async function updateProject(req): Promise<void> {
 async function uploadDocumentToProject(req): Promise<IReturnMetadata> {
   try {
     const projectName = req.params.projectName;
-    const owner = req.user.uri;
-    console.log('req.files', req.files)
     const data = req.files.resource[0].buffer;
-    console.log('data', data)
     // upload document
     const documentUrl = await docStore.uploadDocument(
       projectName,

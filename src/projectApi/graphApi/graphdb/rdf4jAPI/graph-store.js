@@ -13,6 +13,8 @@ async function createNamedGraph(repositoryId,{ context, baseURI, data },token) {
     const options = {
       method: "post",
       url,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Basic ${btoa(
