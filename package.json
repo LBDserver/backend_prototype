@@ -36,6 +36,7 @@
     "lodash": "^4.17.20",
     "mongodb": "^3.6.3",
     "mongoose": "^5.11.10",
+    "mongoose-gridfs": "^1.2.48",
     "mongoose-type-email": "^1.0.12",
     "mongoose-type-url": "^2.1.0",
     "morgan": "^1.10.0",

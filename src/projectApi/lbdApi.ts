@@ -340,8 +340,7 @@ async function uploadDocumentToProject(req): Promise<IReturnMetadata> {
     // upload document
     const documentUrl = await docStore.uploadDocument(
       projectName,
-      data,
-      owner
+      data
     );
 
 
@@ -372,8 +371,8 @@ async function getDocumentFromProject(req): Promise<Buffer> {
   const mimeType = req.headers.accept || "application/ld+json"
   try {
     const data = await docStore.getDocument(projectName, fileId);
-    const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", mimeType)
-    return data.main.buffer
+    // const metadata = await graphStore.getNamedGraph(`${uri}.meta`, projectName, "", mimeType)
+    return data
   } catch (error) {
     error.message = (`Unable to get document with uri ${uri}; ${error.message}`)
     throw error
@@ -397,12 +396,13 @@ async function getDocumentMetadata(req): Promise<IReturnMetadata> {
 
 async function deleteDocumentFromProject(req): Promise<void> {
   try {
-    const docUrl = await docStore.deleteDocument(req.params.fileId);
+    const uri = `${process.env.DOMAIN_URL}${req.originalUrl}`;
+    const docUrl = await docStore.deleteDocument(uri);
     const projectName = req.params.projectName;
-    await graphStore.deleteNamedGraph(docUrl + ".meta", projectName, "");
+    await graphStore.deleteNamedGraph(uri + ".meta", projectName, "");
 
     return
-  } catch (error) {
+  } catch (error) { 
     error.message = (`Unable to delete document; ${error.message}`)
     throw error
   }

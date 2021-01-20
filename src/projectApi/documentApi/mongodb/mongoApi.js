@@ -1,6 +1,8 @@
 const { Project, File } = require("./models");
 const { checkPermissions } = require("../../../authApi");
 const { v4 } = require("uuid");
+const { createBucket } = require("mongoose-gridfs");
+const { Readable } =require('stream')
 
 async function createProjectDoc(url, _id) {
   try {
@@ -8,10 +10,8 @@ async function createProjectDoc(url, _id) {
     await project.save();
     return project;
   } catch (error) {
-    error.message = (
-      `Unable to create project with id ${id} in the document store; ${error.message}`
-    );
-    throw error
+    error.message = `Unable to create project with id ${id} in the document store; ${error.message}`;
+    throw error;
   }
 }
 
@@ -20,8 +20,8 @@ async function deleteProjectDoc(id) {
     await Project.findByIdAndDelete(id);
     return true;
   } catch (error) {
-    error.message = (`Unable to delete project with id ${id}; ${error.message}`);
-    throw error
+    error.message = `Unable to delete project with id ${id}; ${error.message}`;
+    throw error;
   }
 }
 
@@ -29,10 +29,10 @@ async function pushProjectToCreator(id, creator) {
   try {
     creator.projects.push(id);
     await creator.save();
-    return true
+    return true;
   } catch (error) {
-    error.message = `Unable to push project with id ${id} to creator ${creator.uri}; ${error.message}`
-    throw error
+    error.message = `Unable to push project with id ${id} to creator ${creator.uri}; ${error.message}`;
+    throw error;
   }
 }
 
@@ -45,19 +45,19 @@ async function deleteProjectFromUser(id, user) {
     await user.save();
     return true;
   } catch (error) {
-    error.message =`Unable to remove project with id ${id} from user ${user.uri}; ${error.message}`
-    throw error
+    error.message = `Unable to remove project with id ${id} from user ${user.uri}; ${error.message}`;
+    throw error;
   }
 }
 
 async function findAllProjectDocuments() {
-    try {
-      const projects = await Project.find();
-      return(projects);
-    } catch (error) {
-      error.message = (`Unable to find all project documents; ${error.message}`)
-      throw error
-    }
+  try {
+    const projects = await Project.find();
+    return projects;
+  } catch (error) {
+    error.message = `Unable to find all project documents; ${error.message}`;
+    throw error;
+  }
 }
 // ACL implemented
 // getProjectDoc = ({ projectId, user }) => {
@@ -99,37 +99,59 @@ async function findAllProjectDocuments() {
 //     })
 // }
 
-async function uploadDocument (id, data) {
-    try {
-      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
-      const fileId = v4();
-      const file = new File({
-        main: data,
-        project: projectUrl,
-        id: fileId,
-      });
+async function uploadDocument(id, data) {
+  try {
+    const bucket = createBucket();
+    const _id = v4();
+    filename = `${process.env.DOMAIN_URL}/lbd/${id}/files/${_id}`;
 
-      file.url = `${process.env.DOMAIN_URL}/lbd/${id}/files/${file.id}`;
-      await file.save();
-      return (file.url);
-    } catch (error) {
-      error.message = (`Unable to upload document; ${error.message}`)
-      throw error
-    }
-};
+    // const stream = bucket.createWriteStream({_id, filename: "test.gltf"})
+    const readable = new Readable();
+    readable._read = () => {}; // _read is required but you can noop it
+    readable.push(data);
+    readable.push(null);
+    const stream = bucket.writeFile({ filename}, readable);
+    console.log('stream', stream)
+    console.log('_id', _id)
+    // const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
+    // const fileId = v4();
+    // const file = ne File({
+    //   main: data,
+    //   project: projectUrl,
+    //   id: fileId,
+    // });
 
-async function deleteDocument(id) {
-    try {
-      document = await File.findByIdAndDelete(id);
-      if (!document) {
-        throw new Error(`Document not found`);
+    // file.url = `${process.env.DOMAIN_URL}/lbd/${id}/files/${file.id}`;
+    // await file.save();
+    return (filename);
+  } catch (error) {
+    error.message = `Unable to upload document; ${error.message}`;
+    throw error;
+  }
+}
+
+async function deleteDocument(filename) {
+  const bucket = createBucket()
+  const doc = await bucket.findOne({filename})
+  return new Promise((resolve, reject) => {
+    bucket.deleteFile(doc._id, (error, results) => {
+      if (error) {
+        reject(error)
       }
-      return(document.url);
-    } catch (error) {
-      error.message = (`Unable to delete document with id ${id}; ${error.message}`)
-      throw error
-    }
-};
+      resolve()
+    });
+  })
+  // try {
+  //   document = await File.findByIdAndDelete(id);
+  //   if (!document) {
+  //     throw new Error(`Document not found`);
+  //   }
+  //   return document.url;
+  // } catch (error) {
+  //   error.message = `Unable to delete document with id ${id}; ${error.message}`;
+  //   throw error;
+  // }
+}
 
 // ACL implemented
 // updateProjectDoc = ({ projectId, body, user }) => {
@@ -157,21 +179,44 @@ async function deleteDocument(id) {
 // }
 
 // ACL implemented
-async function getDocument (id, fileId) {
+function getDocument(id, fileId) {
+  return new Promise((resolve, reject) => {
     try {
-      const projectUrl = `${process.env.DOMAIN_URL}/lbd/${id}`;
-      const file = await File.findOne({ _id: fileId, project: projectUrl });
-
-      if (!file) {
-        throw new Error(`Document not found`)
-      }
-
-      return (file);
+      let file = ''
+      const filename = `${process.env.DOMAIN_URL}/lbd/${id}/files/${fileId}`;
+      console.log('filename', filename)
+      const bucket = createBucket()
+      const readStream = bucket.createReadStream({filename})
+      readStream.on('data', (chunk) => {
+        file += chunk
+      })
+      readStream.on('end', () => {
+        resolve(file)
+      })
+      // bucket.findOne({filename}, (err, content) => {
+      //   if (err) {
+      //     console.log('err.message', err.message)
+      //     throw err
+      //   }
+      //   let buff
+      //   const stream = content.read()
+      //   stream.pipe(buff)
+      //   stream.on('close', resolve(buff));
+      //   })
+      
+      // const file = await File.findOne({ _id: fileId, project: projectUrl });
+  
+      // if (!file) {
+      //   throw new Error(`Document not found`);
+      // }
+  
+      // return file;
     } catch (error) {
-      error.message = (`Unable to get document with id ${id}; ${error.message}`)
-      throw error
+      error.message = `Unable to get document with id ${id}; ${error.message}`;
+      reject(error)
     }
-};
+  })
+}
 
 // only admin
 // migrateMongo = () => {
