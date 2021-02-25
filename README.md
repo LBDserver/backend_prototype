@@ -6,7 +6,7 @@
 * (Optional) Create a dedicated folder for all your LBDserver downloads.
 
 ## Installation
-* (option 1a: using [git](https://git-scm.com/download)) - run `git clone https://github.com/LBDserver/front-react.git` in your favourite terminal, in your favourite folder.
+* (option 1a: using [git](https://git-scm.com/download)) - run `git clone https://github.com/LBDserver/backend_prototype.git` in your favourite terminal, in your favourite folder.
 * (option 1b: using ZIP folders) - Go to the CODE button at the top of the repository and click `Download ZIP`. Extract the folder.
 * Once the repository is extracted, run `npm install` to install the necessary modules.
 * Create a dev.env file in the `>config` directory, and copy the items from `dev.env.template`. You can change ports, token secrets, admin configuration etc. in this .dev file. 
@@ -20,7 +20,7 @@
 
 ## Startup
 * Start both [MongoDB](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and GraphDB. By default they will run respectively on port 27017 and port 7200.
-* Run the command `npm start` in a terminal (in the folder where you installed this repository). Since concurrently is installed, this command will simultaneously start both the frontend and backend (Please ensure that you follow the folder structure as mentioned above)
+* Run the command `npm run dev` in a terminal (in the folder where you installed this repository). Since concurrently is installed, this command will simultaneously start both the frontend and backend (Please ensure that you follow the folder structure as mentioned above)
 * The application will be hosted on port 5000. You may find it at http://localhost:5000.
 
 
