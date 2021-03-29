@@ -32,7 +32,9 @@ const {
     createGraphBody,
     namedGraphMeta,
     repoConfig,
-    aclMeta
+    aclMeta,
+    createDCATResourceMeta,
+    createDCATProjectMeta
 } = require('./util')
 
 module.exports = {
@@ -60,8 +62,11 @@ module.exports = {
     createGraphBody,
     namedGraphMeta,
     aclMeta,
-    repoConfig
+    repoConfig,
     // replaceNamedGraph,
     // updateNamedGraph,
     // queryNamedGraph
+
+    createDCATProjectMeta,
+    createDCATResourceMeta
 }

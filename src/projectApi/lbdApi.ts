@@ -36,7 +36,8 @@ async function createProject(req): Promise<IReturnProject> {
   }
 
   try {
-    const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, title, description);
+    // const repoMetaData = graphStore.namedGraphMeta(repoUrl, acl, title, description);
+    const repoMetaData = graphStore.createDCATProjectMeta(repoUrl, title, description, acl, creator.uri)
     creator.projects.push(id);
 
     // write everything to the appropriate database
@@ -386,7 +387,7 @@ async function uploadDocumentToProject(req): Promise<IReturnMetadata> {
 
     // upload document metadata to the graph store
     const acl = await setAcl(req);
-    const metadata = await setMetaGraph(projectName, documentUrl, acl, label, description);
+    const metadata = await setMetaGraph(projectName, documentUrl, acl, label, description, req.user.uri);
     const permissions: string[] = Array.from(await queryPermissions(req.user, metadata["lbd:hasAcl"]["@id"], projectName))
 
     return { uri: documentUrl, metadata, permissions };
@@ -463,7 +464,8 @@ async function createNamedGraph(req): Promise<IReturnMetadata> {
       uri,
       acl,
       label,
-      description
+      description,
+      req.user.uri
     );
 
     const permissions: string[] = Array.from(await queryPermissions(req.user, acl, projectName))
@@ -628,14 +630,15 @@ async function setGraph(req, projectName, acl, context): Promise<void> {
   }
 };
 
-async function setMetaGraph(projectName, uri, acl, label, description): Promise<string> {
+async function setMetaGraph(projectName, uri, acl, label, description, creator): Promise<string> {
   try {
     let graphMetaData;
-    graphMetaData = await graphStore.namedGraphMeta(
+    graphMetaData = await graphStore.createDCATResourceMeta(
       uri,
       acl,
       label,
-      description
+      description,
+      creator
     );
 
     const graphMeta = {

@@ -299,6 +299,7 @@ export class ProjectController extends Controller {
         @Query() query?: string
     ): Promise<IReturnGraph> {
         try {
+            console.log('query', query)
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
             const response: IReturnGraph = await api.getNamedGraph(authReq)
