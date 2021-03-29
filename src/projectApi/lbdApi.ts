@@ -167,6 +167,7 @@ async function getOneProject(req: IAuthRequest) {
   try {
     const project = await getProjectData(projectName, user, mimeType)
     project.permissions = req.permissions
+    console.log(`req.permissions`, req.permissions)
     if (req.query.query) {
       const results = await queryProject(req);
       project.results = results
@@ -650,6 +651,15 @@ async function setMetaGraph(projectName, uri, acl, label, description, creator):
     };
 
     await graphStore.createNamedGraph(projectName, graphMeta, "");
+
+    // register metadata in DCAT catalog of the project
+    console.log(`uri`, uri)
+
+    const repoUrl = `${process.env.DOMAIN_URL}/lbd/${projectName}`;
+    const update = `PREFIX dcat: <http://www.w3.org/ns/dcat#> INSERT DATA { GRAPH <${repoUrl}.meta> { <${repoUrl}> dcat:dataset <${uri}.meta>. } }`
+    console.log(`update`, update)
+    console.log(`encodeURIComponent(update)`, encodeURIComponent(update))
+    await graphStore.updateRepositorySparql(projectName, encodeURIComponent(update))
 
     return parse(graphMetaData);
   } catch (error) {
