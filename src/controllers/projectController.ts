@@ -215,10 +215,10 @@ export class ProjectController extends Controller {
         try {
             let authReq: IAuthRequest = await authenticate(req)
             authReq = await authorize(authReq)
-            const data: ArrayBuffer = await api.getDocumentFromProject(authReq)
+            const data = await api.getDocumentFromProject(authReq)
             const response = (<any>req).res as express.Response 
             if (data) {
-                response.end(Buffer.from(data))
+                response.end(Buffer.from(data, "base64"))
             }
             //only for documentation purposes
             // return Buffer.from(data)

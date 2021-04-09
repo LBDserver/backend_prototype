@@ -188,7 +188,7 @@ function getDocument(id, fileId) {
       const bucket = createBucket()
       const readStream = bucket.createReadStream({filename})
       readStream.on('data', (chunk) => {
-        file += chunk
+        file += chunk.toString("base64");
       })
       readStream.on('end', () => {
         resolve(file)
